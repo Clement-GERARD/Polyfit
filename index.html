@@ -1,1 +1,41 @@
-Hello World ! 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redirection</title>
+
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        @keyframes rotation {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .spinner {
+            width: 25vmin;
+            height: 25vmin;
+            border-top: 12px solid #333;
+            border-radius: 50%;
+            animation: rotation 2s linear infinite;
+            background-color: white; /* Couleur de la bille */
+        }
+    </style>
+</head>
+<body>
+    <div class="spinner"></div>
+    <script>
+        // Fonction pour la redirection après 2 secondes
+        setTimeout(function() {
+            window.location.href = 'Main.html';
+        }, 2000);
+    </script>
+</body>
+</html>
