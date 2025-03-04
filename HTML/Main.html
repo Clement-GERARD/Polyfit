@@ -4,54 +4,63 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fit de courbes I(V)</title>
-    <link rel="stylesheet" href="../CSS/styles.css">
+    <link rel="stylesheet" href="styles.css">
+    <script defer src="script.js"></script>
 </head>
 <body>
     <header>
+        <div class="header-left">
+            <a href="settings.html" class="settings-icon">⚙️</a>
+        </div>
         <h1>Fit de courbes I(V)</h1>
-        <div class="settings">
-            <label for="lang-select">Langue :</label>
-            <select id="lang-select">
-                <option value="fr">Français</option>
-                <option value="en">English</option>
-            </select>
+        <div class="header-right">
+            <button class="menu-btn">☰</button>
+            <nav class="dropdown-menu">
+                <a href="remerciements.html">Remerciements</a>
+                <a href="contexte.html">Contexte</a>
+                <a href="cgu.html">CGU</a>
+                <a href="mentions.html">Mentions légales</a>
+                <a href="confidentialite.html">Confidentialité</a>
+            </nav>
         </div>
     </header>
 
     <main>
-        <section class="upload-section">
-            <label>Téléverser un fichier :</label>
-            <input type="file" id="file-upload">
-        </section>
-
-        <section class="graph-section">
-            <h2>Courbes</h2>
-            <canvas id="curveCanvas"></canvas>
-        </section>
-
-        <section class="controls">
-            <button id="start-btn">Lancer</button>
-            <button id="stop-btn">Stop</button>
-        </section>
-
-        <section class="results">
-            <h2>Résultats</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Rs</th>
-                        <th>Rsh</th>
-                        <th>Jo</th>
-                        <th>Jph</th>
-                    </tr>
-                </thead>
-                <tbody id="results-body">
-                    <!-- Résultats générés ici -->
-                </tbody>
-            </table>
-        </section>
+        <div class="container">
+            <section class="graph-section">
+                <h2>Courbes</h2>
+                <canvas id="curveCanvas"></canvas>
+                <div class="controls">
+                    <button id="start-btn">Lancer</button>
+                    <button id="stop-btn">Stop</button>
+                </div>
+            </section>
+            
+            <section class="results-section">
+                <h2>Résultats</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Rs</th>
+                            <th>Rsh</th>
+                            <th>Jo</th>
+                            <th>Jph</th>
+                        </tr>
+                    </thead>
+                    <tbody id="results-body">
+                        <!-- Résultats ici -->
+                    </tbody>
+                </table>
+            </section>
+        </div>
     </main>
 
-    <script src="../JAVASCRIPT/script.js"></script>
+    <footer>
+        <div class="footer-container">
+            <div class="footer-left">Nom du groupe</div>
+            <div class="footer-separator">|</div>
+            <div class="footer-right">Nom de l'école</div>
+        </div>
+    </footer>
 </body>
 </html>
