@@ -2,14 +2,42 @@ document.getElementById('file-input').addEventListener('change', handleFiles);
 
 function handleFiles(event) {
     const files = event.target.files;
-    if (!files.length) return;
 
-    // Affiche un message temporaire dans chaque section
-    document.querySelector('#graph-zone .content-placeholder').textContent = "Affichage des courbes en cours...";
-    document.querySelector('#random-method .content-placeholder').textContent = "Analyse par méthode aléatoire en cours...";
-    document.querySelector('#mlp-method .content-placeholder').textContent = "Analyse par MLP en cours...";
-    document.querySelector('#cnn-method .content-placeholder').textContent = "Analyse par CNN en cours...";
+    console.log("[LOG] Détection des fichiers :", files);
 
-    // TODO: ici on ajoutera l'envoi des fichiers à l'API + affichage réel
+    if (!files.length) {
+        console.warn("[WARN] Aucun fichier sélectionné.");
+        return;
+    }
+
+    // Mise à jour des zones avec messages temporaires
+    updatePlaceholder("#graph-zone", "Affichage des courbes en cours...");
+    updatePlaceholder("#random-method", "Analyse par méthode aléatoire en cours...");
+    updatePlaceholder("#mlp-method", "Analyse par MLP en cours...");
+    updatePlaceholder("#cnn-method", "Analyse par CNN en cours...");
+
+    // Simule une requête
+    simulateApiRequest(files);
 }
 
+function updatePlaceholder(selector, message) {
+    const element = document.querySelector(`${selector} .content-placeholder`);
+    if (element) {
+        element.textContent = message;
+    } else {
+        console.error(`[ERROR] Élément non trouvé : ${selector}`);
+    }
+}
+
+function simulateApiRequest(files) {
+    console.log("[INFO] Simulation de l'envoi des fichiers à l'API...");
+
+    setTimeout(() => {
+        console.log("[SUCCESS] API a répondu avec succès (simulation)");
+
+        updatePlaceholder("#graph-zone", "✅ Courbes affichées !");
+        updatePlaceholder("#random-method", "🔍 Résultats aléatoires disponibles");
+        updatePlaceholder("#mlp-method", "✅ Prédiction MLP reçue");
+        updatePlaceholder("#cnn-method", "✅ Prédiction CNN reçue");
+    }, 1000);
+}
