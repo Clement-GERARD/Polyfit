@@ -1,37 +1,44 @@
 <!DOCTYPE html>
 <html lang="fr">
-
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IA Photovoltaïque</title>
-    <link rel="stylesheet" href="css/styles.css">
+    <title>Polyfit AI – Analyse photovoltaïque</title>
+    <link rel="stylesheet" href="style/main.css">
 </head>
-
 <body>
     <header>
-        <h1>Bienvenue sur l'outil d'IA Photovoltaïque</h1>
-        <p>Charger votre fichier CSV pour obtenir les prédictions des paramètres photovoltaïques.</p>
+        <h1>🧪 Interface Polyfit AI</h1>
+        <p>Déposez vos fichiers CSV pour analyse par IA</p>
     </header>
 
     <section id="upload-section">
-        <h2>Charger un fichier CSV</h2>
-        <input type="file" id="fileInput" accept=".csv" />
-        <button onclick="uploadFile()">Télécharger</button>
+        <input type="file" id="file-input" multiple accept=".csv">
+        <label for="file-input">📁 Sélectionner des fichiers CSV</label>
     </section>
 
-    <section id="result-section" style="display:none;">
-        <h2>Résultats des Prédictions</h2>
-        <div id="predictions"></div>
-        <div id="graph"></div>
-    </section>
+    <main id="results">
+        <div class="result-card" id="graph-zone">
+            <h2>📊 Visualisation des courbes</h2>
+            <div class="content-placeholder">Aucun fichier chargé</div>
+        </div>
 
-    <footer>
-        <p>&copy; 2025 IA Photovoltaïque</p>
-    </footer>
+        <div class="result-card" id="random-method">
+            <h2>🎲 Méthode aléatoire</h2>
+            <div class="content-placeholder">En attente d’analyse</div>
+        </div>
 
-    <script src="js/api.js"></script>
-    <script src="js/main.js"></script>
+        <div class="result-card" id="mlp-method">
+            <h2>🧠 Prédiction MLP</h2>
+            <div class="content-placeholder">En attente d’analyse</div>
+        </div>
+
+        <div class="result-card" id="cnn-method">
+            <h2>🧠 Prédiction CNN</h2>
+            <div class="content-placeholder">En attente d’analyse</div>
+        </div>
+    </main>
+
+    <script src="scripts/main.js"></script>
 </body>
-
 </html>
+
