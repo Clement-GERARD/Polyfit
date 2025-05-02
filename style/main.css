@@ -1,3 +1,9 @@
+.logo {
+    max-width: 120px;
+    margin: 0 auto 1rem;
+    display: block;
+}
+
 body {
     font-family: "Segoe UI", sans-serif;
     margin: 0;
