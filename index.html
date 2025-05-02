@@ -1,41 +1,38 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Redirection</title>
-
-    <style>
-        body {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-        }
-
-        @keyframes rotation {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .spinner {
-            width: 25vmin;
-            height: 25vmin;
-            border-top: 12px solid #333;
-            border-radius: 50%;
-            animation: rotation 2s linear infinite;
-            background-color: white; /* Couleur de la bille */
-        }
-    </style>
+    <title>IA Photovoltaïque</title>
+    <link rel="stylesheet" href="css/styles.css">
 </head>
+
 <body>
-    <div class="spinner"></div>
-    <script>
-        // Fonction pour la redirection après 2 secondes
-        setTimeout(function() {
-            window.location.href = 'HTML/Main.html';
-        }, 2000);
-    </script>
+    <header>
+        <h1>Bienvenue sur l'outil d'IA Photovoltaïque</h1>
+        <p>Charger votre fichier CSV pour obtenir les prédictions des paramètres photovoltaïques.</p>
+    </header>
+
+    <section id="upload-section">
+        <h2>Charger un fichier CSV</h2>
+        <input type="file" id="fileInput" accept=".csv" />
+        <button onclick="uploadFile()">Télécharger</button>
+    </section>
+
+    <section id="result-section" style="display:none;">
+        <h2>Résultats des Prédictions</h2>
+        <div id="predictions"></div>
+        <div id="graph"></div>
+    </section>
+
+    <footer>
+        <p>&copy; 2025 IA Photovoltaïque</p>
+    </footer>
+
+    <script src="js/api.js"></script>
+    <script src="js/main.js"></script>
 </body>
+
 </html>
+
