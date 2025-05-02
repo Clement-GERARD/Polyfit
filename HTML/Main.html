@@ -9,7 +9,7 @@
   <p id="api-message">Chargement...</p>
 
   <script>
-    fetch('https://ton-username-ia-photovolt.hf.space/')
+    fetch('https://huggingface.co/spaces/ClementGERARD/Polyfit')
       .then(response => response.json())
       .then(data => {
         document.getElementById('api-message').textContent = data.message;
