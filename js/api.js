@@ -1,4 +1,4 @@
-const API_URL = "https://<ton-api-hugging-face-url>/predict";
+const API_URL = "https://clementgerard-polyfit.hf.space/predict";
 
 async function uploadFile() {
     const fileInput = document.getElementById("fileInput");
