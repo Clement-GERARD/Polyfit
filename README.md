@@ -4,6 +4,7 @@ Interface utilisateur simple pour charger des fichiers CSV de courbes I-V, les a
 
 ## 🗂 Arborescence
 
+```
 frontend/
 ├── index.html # Page principale HTML
 ├── favicon.ico # Icône de l'onglet
@@ -14,6 +15,7 @@ frontend/
 ├── scripts/
 │ └── main.js # Script JS (gestion du chargement & logs)
 └── README.md # Présent fichier
+```
 
 ## 📦 Fonctionnement
 
