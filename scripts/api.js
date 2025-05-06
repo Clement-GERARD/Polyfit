@@ -22,13 +22,14 @@ async function uploadFile(file) {
 }
 
 function displayResults(data) {
-    const predictionsDiv = document.getElementById("predictions");
-    predictionsDiv.innerHTML = `
-        <p><strong>R_s:</strong> ${data.R_s}</p>
-        <p><strong>R_sh:</strong> ${data.R_sh}</p>
-        <p><strong>J_o:</strong> ${data.J_o}</p>
-    `;
-    
-    const graphDiv = document.getElementById("graph");
-    // Code pour générer le graphique avec les résultats, par exemple avec Chart.js
+    updatePlaceholder("#random-method", "Méthode aléatoire : " + JSON.stringify(data.random));
+    updatePlaceholder("#mlp-method", "MLP : " + JSON.stringify(data.mlp));
+    updatePlaceholder("#cnn-method", "CNN : " + JSON.stringify(data.cnn));
+
+    // Exemple : tracer un graphique si data.curves est présent
+    if (data.curves) {
+        drawGraph(data.curves); // à implémenter avec Chart.js ou autre
+    } else {
+        updatePlaceholder("#graph-zone", "Pas de courbes reçues.");
+    }
 }
