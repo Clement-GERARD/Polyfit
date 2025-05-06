@@ -70,13 +70,26 @@ function displayResults(data) {
 
     // Exemple : tracer un graphique si data.curves est présent
     if (data.curves) {
-        drawGraph(data.curves); // à implémenter avec Chart.js ou autre
+        const graphContainer = document.getElementById("graph-zone");
+        drawGraph(data.curves, graphContainer);
+
     } else {
         updatePlaceholder("#graph-zone", "Pas de courbes reçues.");
     }
 }
 
 function drawGraph(data, container) {
+    if (!container) {
+        console.error("[ERROR] Élément container pour le graphe non trouvé.");
+        return;
+    }
+
+    const placeholder = container.querySelector('.content-placeholder');
+    if (placeholder) {
+        placeholder.innerHTML = "<em>Graphique en cours de développement...</em>";
+    } else {
+        container.innerHTML = "<em>Graphique en cours de développement...</em>";
+    }
+
     console.log("[INFO] Graphique à tracer avec :", data);
-    container.innerHTML = "<em>Graphique en cours de développement...</em>";
 }
