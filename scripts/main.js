@@ -10,14 +10,12 @@ function handleFiles(event) {
         return;
     }
 
-    // Mise à jour des zones avec messages temporaires
     updatePlaceholder("#graph-zone", "Affichage des courbes en cours...");
     updatePlaceholder("#random-method", "Analyse par méthode aléatoire en cours...");
     updatePlaceholder("#mlp-method", "Analyse par MLP en cours...");
     updatePlaceholder("#cnn-method", "Analyse par CNN en cours...");
 
-    // Simule une requête
-    simulateApiRequest(files);
+    uploadFile(files[0]); // Appel réel
 }
 
 function updatePlaceholder(selector, message) {
