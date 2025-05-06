@@ -1,9 +1,8 @@
 const API_URL = "https://clementgerard-polyfit.hf.space/predict";
 
-async function uploadFile() {
-    const fileInput = document.getElementById("fileInput");
+async function uploadFile(file) {
     const formData = new FormData();
-    formData.append("file", fileInput.files[0]);
+    formData.append("file", file);
 
     try {
         const response = await fetch(API_URL, {
