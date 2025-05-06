@@ -75,3 +75,8 @@ function displayResults(data) {
         updatePlaceholder("#graph-zone", "Pas de courbes reçues.");
     }
 }
+
+function drawGraph(data, container) {
+    console.log("[INFO] Graphique à tracer avec :", data);
+    container.innerHTML = "<em>Graphique en cours de développement...</em>";
+}
