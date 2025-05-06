@@ -68,14 +68,13 @@ function displayResults(data) {
     updatePlaceholder("#mlp-method", "MLP : " + JSON.stringify(data.mlp));
     updatePlaceholder("#cnn-method", "CNN : " + JSON.stringify(data.cnn));
 
-    // Exemple : tracer un graphique si data.curves est présent
-    if (data.curves) {
-        const graphContainer = document.getElementById("graph-zone");
-        drawGraph(data.curves, graphContainer);
-
+    if (data.curve_image) {
+        const container = document.querySelector("#graph-zone .content-placeholder");
+        container.innerHTML = `<img src="data:image/png;base64,${data.curve_image}" alt="Courbe IV générée" style="max-width:100%; height:auto; border-radius:10px; box-shadow: 0 0 10px rgba(0,0,0,0.2);" />`;
     } else {
-        updatePlaceholder("#graph-zone", "Pas de courbes reçues.");
+        updatePlaceholder("#graph-zone", "Pas d'image reçue.");
     }
+
 }
 
 function drawGraph(data, container) {
