@@ -50,6 +50,8 @@ async function uploadFile(file) {
     }
 }
 
+console.log("[DEBUG] Données reçues de l'API :", data);
+
 function displayResults(data) {
     updatePlaceholder("#random-method", "Méthode aléatoire : " + JSON.stringify(data.random));
     updatePlaceholder("#mlp-method", "MLP : " + JSON.stringify(data.mlp));
