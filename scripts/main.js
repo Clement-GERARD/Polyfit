@@ -27,19 +27,6 @@ function updatePlaceholder(selector, message) {
     }
 }
 
-function simulateApiRequest(files) {
-    console.log("[INFO] Simulation de l'envoi des fichiers à l'API...");
-
-    setTimeout(() => {
-        console.log("[SUCCESS] API a répondu avec succès (simulation)");
-
-        updatePlaceholder("#graph-zone", "✅ Courbes affichées !");
-        updatePlaceholder("#random-method", "🔍 Résultats aléatoires disponibles");
-        updatePlaceholder("#mlp-method", "✅ Prédiction MLP reçue");
-        updatePlaceholder("#cnn-method", "✅ Prédiction CNN reçue");
-    }, 1000);
-}
-
 const API_URL = "https://clementgerard-polyfit.hf.space/predict";
 
 async function uploadFile(file) {
