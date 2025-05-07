@@ -63,7 +63,7 @@ function displayResults(data) {
         Rs: ${data.params.Rs}<br>
         Rsh: ${data.params.Rsh}<br>
         n: ${data.params.n}
-    `);
+    `);  // Utilisation de innerHTML ici pour que les <br> fonctionnent
     updatePlaceholder("#cnn-method", "Coming Soon");
 
     if (data.curve_image) {
