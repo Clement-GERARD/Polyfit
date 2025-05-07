@@ -55,9 +55,16 @@ async function uploadFile(file) {
 }
 
 function displayResults(data) {
-    updatePlaceholder("#random-method", "Méthode aléatoire : " + JSON.stringify(data.random));
-    updatePlaceholder("#mlp-method", "MLP : " + JSON.stringify(data.mlp));
-    updatePlaceholder("#cnn-method", "CNN : " + JSON.stringify(data.cnn));
+    // Affichage des résultats pour la méthode MLP
+    updatePlaceholder("#random-method", "Coming Soon");
+    updatePlaceholder("#mlp-method", `
+        J0: ${data.params.J0}<br>
+        Jph: ${data.params.Jph}<br>
+        Rs: ${data.params.Rs}<br>
+        Rsh: ${data.params.Rsh}<br>
+        n: ${data.params.n}
+    `);
+    updatePlaceholder("#cnn-method", "Coming Soon");
 
     if (data.curve_image) {
         const container = document.querySelector("#graph-zone .content-placeholder");
@@ -66,6 +73,10 @@ function displayResults(data) {
         updatePlaceholder("#graph-zone", "Pas d'image reçue.");
     }
 
+    // Pour afficher les points du fichier envoyé dans un graphique
+    if (data.points) {
+        drawGraph(data.points, "#graph-zone");
+    }
 }
 
 function drawGraph(data, container) {
