@@ -41,6 +41,10 @@ async function uploadFile(file) {
 
         if (response.ok) {
             const data = await response.json();
+
+            // Affichage des données reçues pour déboguer
+            console.log("[DEBUG] Données reçues de l'API :", data);
+
             displayResults(data);
         } else {
             alert("Erreur lors du téléchargement du fichier.");
@@ -49,8 +53,6 @@ async function uploadFile(file) {
         console.error("Erreur:", error);
     }
 }
-
-console.log("[DEBUG] Données reçues de l'API :", data);
 
 function displayResults(data) {
     updatePlaceholder("#random-method", "Méthode aléatoire : " + JSON.stringify(data.random));
