@@ -21,7 +21,7 @@ function handleFiles(event) {
 function updatePlaceholder(selector, message) {
     const element = document.querySelector(`${selector} .content-placeholder`);
     if (element) {
-        element.textContent = message;
+        element.innerHTML = message;  // Utiliser innerHTML pour gérer les <br> correctement
     } else {
         console.error(`[ERROR] Élément non trouvé : ${selector}`);
     }
