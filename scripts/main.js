@@ -70,7 +70,7 @@ function displayResults(data) {
 
     if (data.curve_image) {
         const container = document.querySelector("#graph-zone .content-placeholder");
-        container.innerHTML = `<img src="data:image/png;base64,${data.curve_image}" alt="Courbe IV générée" style="max-width:100%; height:auto; border-radius:10px; box-shadow: 0 0 10px rgba(0,0,0,0.2);" />`;
+        container.innerHTML = `<img src="data:image/png;base64,${data.curve_image}" alt="Courbe IV générée" style="width:100%; height:auto; border-radius:10px; box-shadow: 0 0 10px rgba(0,0,0,0.2);" />`;
     } else {
         updatePlaceholder("#graph-zone", "Pas d'image reçue.");
     }
