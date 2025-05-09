@@ -1,13 +1,15 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <title>Polyfit AI – Analyse photovoltaïque</title>
-    <link rel="stylesheet" href="style/main.css">
-    <link rel="icon" href="favicon.ico" type="image/x-icon">
+  <meta charset="UTF-8">
+  <title>Polyfit AI – Analyse photovoltaïque</title>
+  <link rel="stylesheet" href="style/main.css">
+  <link rel="icon" href="favicon.ico" type="image/x-icon">
 </head>
 <body>
-    <header class="header">
+
+  <!-- En-tête -->
+  <header class="header">
     <div class="logo-container">
       <img src="assets/logo.png" alt="Logo Polyfit AI" class="logo">
     </div>
@@ -17,35 +19,48 @@
     </div>
   </header>
 
-    <section id="upload-section">
-        <input type="file" id="file-input" multiple accept=".csv">
-        <label for="file-input">📁 Sélectionner des fichiers CSV</label>
-    </section>
+  <!-- Upload -->
+  <section id="upload-section">
+    <input type="file" id="file-input" multiple accept=".csv">
+    <label for="file-input">📁 Sélectionner des fichiers CSV</label>
+  </section>
 
-    <main id="results">
-        <div class="result-card" id="graph-zone">
-            <h2>📊 Visualisation des courbes</h2>
-            <div class="content-placeholder">Aucun fichier chargé</div>
-        </div>
+  <!-- Contenu principal -->
+  <main class="main-container">
 
-        <div class="result-card" id="random-method">
-            <h2>🎲 Méthode aléatoire</h2>
-            <div class="content-placeholder">En attente d’analyse</div>
-        </div>
+    <!-- Zone graphique -->
+    <div class="left-panel">
+      <div class="result-card" id="graph-zone">
+        <h2>📊 Visualisation des courbes</h2>
+        <div class="content-placeholder">Aucun fichier chargé</div>
+      </div>
+    </div>
 
-        <div class="result-card" id="mlp-method">
-            <h2>🧠 Prédiction MLP</h2>
-            <div class="content-placeholder">En attente d’analyse</div>
-        </div>
+    <!-- Zone de prédictions -->
+    <div class="right-panel">
+      <div class="result-card" id="random-method">
+        <h2>🎲 Méthode aléatoire</h2>
+        <div class="content-placeholder">En attente d’analyse</div>
+      </div>
 
-        <div class="result-card" id="cnn-method">
-            <h2>🧠 Prédiction CNN</h2>
-            <div class="content-placeholder">En attente d’analyse</div>
-        </div>
-    </main>
+      <div class="result-card" id="mlp-method">
+        <h2>🧠 Prédiction MLP</h2>
+        <div class="content-placeholder">En attente d’analyse</div>
+      </div>
 
-    <script src="scripts/main.js"></script>
+      <div class="result-card" id="cnn-method">
+        <h2>🧠 Prédiction CNN</h2>
+        <div class="content-placeholder">En attente d’analyse</div>
+      </div>
+
+      <div class="result-card" id="genetic-method">
+        <h2>🧬 Algorithme génétique</h2>
+        <div class="content-placeholder">En attente d’analyse</div>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="scripts/main.js"></script>
 </body>
 </html>
-
-
