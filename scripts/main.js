@@ -39,6 +39,8 @@ async function uploadFile(file) {
             body: formData
         });
 
+        console.log("Résultat brut reçu :", response);
+
         if (response.ok) {
             const data = await response.json();
 
