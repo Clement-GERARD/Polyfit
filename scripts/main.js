@@ -70,7 +70,7 @@ function displayResults(data) {
 
     // Méthode génétique
     if (data.params_genetique) {
-        updatePlaceholder("#cnn-method", `
+        updatePlaceholder("#genetic-method", `
             J0: ${data.params_genetique.J0}<br>
             Jph: ${data.params_genetique.Jph}<br>
             Rs: ${data.params_genetique.Rs}<br>
