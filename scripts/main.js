@@ -14,6 +14,7 @@ function handleFiles(event) {
     updatePlaceholder("#random-method", "Analyse par méthode aléatoire en cours...");
     updatePlaceholder("#mlp-method", "Analyse par MLP en cours...");
     updatePlaceholder("#cnn-method", "Analyse par CNN en cours...");
+    updatePlaceholder("#genetic-method", "Analyse par CNN en cours...");
 
     uploadFile(files[0]); // Appel réel
 }
@@ -65,6 +66,17 @@ function displayResults(data) {
             Rs: ${data.params_mlp.Rs}<br>
             Rsh: ${data.params_mlp.Rsh}<br>
             n: ${data.params_mlp.n}
+        `);
+    }
+
+    // Méthode CNN
+    if (data.params_cnn) {
+        updatePlaceholder("#cnn-method", `
+            J0: ${data.params_cnn.J0}<br>
+            Jph: ${data.params_cnn.Jph}<br>
+            Rs: ${data.params_cnn.Rs}<br>
+            Rsh: ${data.params_cnn.Rsh}<br>
+            n: ${data.params_cnn.n}
         `);
     }
 
