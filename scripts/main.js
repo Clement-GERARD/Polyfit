@@ -88,7 +88,6 @@ function displayResults(data) {
         params: data.params_cnn,
         image: data.curve_image_cnn || null
         };
-    };
     }
 
     // Méthode génétique
@@ -100,10 +99,6 @@ function displayResults(data) {
             Rsh: ${data.params_genetique.Rsh}<br>
             n: ${data.params_genetique.n}
         `);
-        resultDetails["mlp"] = {
-        params: data.params_mlp,
-        image: data.curve_image_mlp || null
-    };
         resultDetails["gen"] = {
         params: data.params_genetique,
         image: data.curve_image_genetique || null
