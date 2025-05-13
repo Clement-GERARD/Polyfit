@@ -129,13 +129,6 @@ function displayResults(data) {
     }
 }
 
-document.querySelectorAll(".details-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-        const method = btn.getAttribute("data-method");
-        openDetailsModal(method);
-    });
-});
-
 function openDetailsModal(method) {
     const modal = document.getElementById("details-modal");
     const body = document.getElementById("modal-body");
@@ -160,6 +153,15 @@ function openDetailsModal(method) {
     modal.classList.remove("hidden");
 }
 
-document.getElementById("modal-close").addEventListener("click", () => {
-    document.getElementById("details-modal").classList.add("hidden");
+document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("modal-close").addEventListener("click", () => {
+        document.getElementById("details-modal").classList.add("hidden");
+    });
+
+    document.querySelectorAll(".details-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const method = btn.getAttribute("data-method");
+            openDetailsModal(method);
+        });
+    });
 });
