@@ -57,42 +57,44 @@ async function uploadFile(file) {
 }
 
 function displayResults(data) {
-    // Affichage des résultats pour la méthode MLP
-    updatePlaceholder("#random-method", "Coming Soon");
-    updatePlaceholder("#mlp-method", `
-        J0: ${data.params.J0}<br>
-        Jph: ${data.params.Jph}<br>
-        Rs: ${data.params.Rs}<br>
-        Rsh: ${data.params.Rsh}<br>
-        n: ${data.params.n}
-    `);  // Utilisation de innerHTML ici pour que les <br> fonctionnent
-    updatePlaceholder("#cnn-method", "Coming Soon");
+    // Méthode MLP
+    if (data.params_mlp) {
+        updatePlaceholder("#mlp-method", `
+            J0: ${data.params_mlp.J0}<br>
+            Jph: ${data.params_mlp.Jph}<br>
+            Rs: ${data.params_mlp.Rs}<br>
+            Rsh: ${data.params_mlp.Rsh}<br>
+            n: ${data.params_mlp.n}
+        `);
+    }
 
-    if (data.curve_image) {
+    // Méthode génétique
+    if (data.params_genetique) {
+        updatePlaceholder("#cnn-method", `
+            J0: ${data.params_genetique.J0}<br>
+            Jph: ${data.params_genetique.Jph}<br>
+            Rs: ${data.params_genetique.Rs}<br>
+            Rsh: ${data.params_genetique.Rsh}<br>
+            n: ${data.params_genetique.n}
+        `);
+    }
+
+    // Méthode aléatoire
+    if (data.params_random) {
+        updatePlaceholder("#random-method", `
+            J0: ${data.params_random.J0}<br>
+            Jph: ${data.params_random.Jph}<br>
+            Rs: ${data.params_random.Rs}<br>
+            Rsh: ${data.params_random.Rsh}<br>
+            n: ${data.params_random.n}
+        `);
+    }
+
+    // Affichage du graphique combiné
+    if (data.curve_image_all) {
         const container = document.querySelector("#graph-zone .content-placeholder");
-        container.innerHTML = `<img src="data:image/png;base64,${data.curve_image}" alt="Courbe IV générée" style="width:100%; height:auto; border-radius:10px; box-shadow: 0 0 10px rgba(0,0,0,0.2);" />`;
+        container.innerHTML = `<img src="data:image/png;base64,${data.curve_image_all}" alt="Courbe IV combinée" style="width:100%; height:auto; border-radius:10px; box-shadow: 0 0 10px rgba(0,0,0,0.2);" />`;
     } else {
-        updatePlaceholder("#graph-zone", "Pas d'image reçue.");
+        updatePlaceholder("#graph-zone", "Pas d'image combinée reçue.");
     }
-
-    // Pour afficher les points du fichier envoyé dans un graphique
-    if (data.points) {
-        drawGraph(data.points, "#graph-zone");
-    }
-}
-
-function drawGraph(data, container) {
-    if (!container) {
-        console.error("[ERROR] Élément container pour le graphe non trouvé.");
-        return;
-    }
-
-    const placeholder = container.querySelector('.content-placeholder');
-    if (placeholder) {
-        placeholder.innerHTML = "<em>Graphique en cours de développement...</em>";
-    } else {
-        container.innerHTML = "<em>Graphique en cours de développement...</em>";
-    }
-
-    console.log("[INFO] Graphique à tracer avec :", data);
 }
