@@ -69,6 +69,10 @@ function displayResults(data) {
             Rsh: ${data.params_mlp.Rsh}<br>
             n: ${data.params_mlp.n}
         `);
+        resultDetails["mlp"] = {
+        params: data.params_mlp,
+        image: data.curve_image_mlp || null
+    };
     }
 
     // Méthode CNN
@@ -80,6 +84,11 @@ function displayResults(data) {
             Rsh: ${data.params_cnn.Rsh}<br>
             n: ${data.params_cnn.n}
         `);
+        resultDetails["cnn"] = {
+        params: data.params_cnn,
+        image: data.curve_image_cnn || null
+        };
+    };
     }
 
     // Méthode génétique
@@ -91,6 +100,14 @@ function displayResults(data) {
             Rsh: ${data.params_genetique.Rsh}<br>
             n: ${data.params_genetique.n}
         `);
+        resultDetails["mlp"] = {
+        params: data.params_mlp,
+        image: data.curve_image_mlp || null
+    };
+        resultDetails["gen"] = {
+        params: data.params_genetique,
+        image: data.curve_image_genetique || null
+    };
     }
 
     // Méthode aléatoire
@@ -102,6 +119,10 @@ function displayResults(data) {
             Rsh: ${data.params_random.Rsh}<br>
             n: ${data.params_random.n}
         `);
+        resultDetails["rand"] = {
+            params: data.params_random,
+            image: data.curve_image_random || null
+        };
     }
 
     // Affichage du graphique combiné
