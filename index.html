@@ -41,31 +41,40 @@
       <div class="result-card" id="random-method">
         <h2>🎲 Méthode aléatoire</h2>
         <div class="content-placeholder">En attente d’analyse</div>
-      </div>
-
-      <div class="result-card" id="mlp-method">
-        <h2>🧠 Prédiction MLP</h2>
-        <div class="content-placeholder">En attente d’analyse</div>
-      </div>
-
-      <div class="result-card" id="cnn-method">
-        <h2>🧠 Prédiction CNN</h2>
-        <div class="content-placeholder">En attente d’analyse</div>
-      </div>
-
-      <div class="result-card" id="genetic-method">
-        <h2>🧬 Algorithme génétique</h2>
-        <div class="content-placeholder">En attente d’analyse</div>
-      </div>
+        <button class="details-btn" data-method="rand">Précisions</button>
     </div>
 
-  </main>
+    <div class="result-card" id="mlp-method">
+      <h2>🧠 Prédiction MLP</h2>
+      <div class="content-placeholder">En attente d’analyse</div>
+      <button class="details-btn" data-method="mlp">Précisions</button>
+    </div>
 
+    <div class="result-card" id="cnn-method">
+      <h2>🧠 Prédiction CNN</h2>
+      <div class="content-placeholder">En attente d’analyse</div>
+      <button class="details-btn" data-method="cnn">Précisions</button>
+    </div>
+
+    <div class="result-card" id="genetic-method">
+      <h2>🧬 Algorithme génétique</h2>
+      <div class="content-placeholder">En attente d’analyse</div>
+      <button class="details-btn" data-method="gen">Précisions</button>
+    </div>
+  </div>
+</main>
+<footer>
   <script src="scripts/main.js"></script>
-    <footer>
-      <script src="scripts/ascii.js"></script>
-    </script>
-  </footer>
-
+  <script src="scripts/ascii.js"></script>
+</footer
+<div id="details-modal" class="modal hidden">
+  <div class="modal-content">
+    <span id="modal-close">&times;</span>
+    <h3 id="modal-title">Détails de la méthode</h3>
+    <div id="modal-body">
+      <p>Chargement...</p>
+    </div>
+  </div>
+</div>
 </body>
 </html>
