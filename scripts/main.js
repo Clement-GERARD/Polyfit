@@ -13,10 +13,10 @@ function handleFiles(event) {
     }
 
     updatePlaceholder("#graph-zone", "Affichage des courbes en cours...");
-    updatePlaceholder("#random-method", "Analyse par méthode aléatoire en cours...");
+    updatePlaceholder("#random-method", "Analyse par Fit Classique en cours...");
     updatePlaceholder("#mlp-method", "Analyse par MLP en cours...");
     updatePlaceholder("#cnn-method", "Analyse par CNN en cours...");
-    updatePlaceholder("#genetic-method", "Analyse par CNN en cours...");
+    updatePlaceholder("#genetic-method", "Analyse par Fit Génétique en cours...");
 
     uploadFile(files[0]); // Appel réel
 }
