@@ -101,7 +101,7 @@ function displayResults(data) {
         `);
         resultDetails["gen"] = {
         params: data.params_genetique,
-        image: data.curve_image_genetique || null
+        image: data.curve_image_gen || null
     };
     }
 
@@ -116,7 +116,7 @@ function displayResults(data) {
         `);
         resultDetails["rand"] = {
             params: data.params_random,
-            image: data.curve_image_random || null
+            image: data.curve_image_rand || null
         };
     }
 
