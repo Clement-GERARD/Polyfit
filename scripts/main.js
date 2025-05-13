@@ -137,6 +137,7 @@ function openDetailsModal(method) {
     const details = resultDetails[method];
 
     if (!details || !details.params || !details.image) {
+        console.warn("[WARN] Données manquantes pour la méthode :", method, details);
         body.innerHTML = "<p>Aucune donnée disponible pour cette méthode.</p>";
     } else {
         title.textContent = `Détails – ${method.toUpperCase()}`;
