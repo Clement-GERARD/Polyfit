@@ -1,5 +1,7 @@
 document.getElementById('file-input').addEventListener('change', handleFiles);
 
+const resultDetails = {};  // Stockage des résultats par méthode
+
 function handleFiles(event) {
     const files = event.target.files;
 
