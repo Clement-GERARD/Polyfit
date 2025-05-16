@@ -51,6 +51,9 @@ async function uploadFile(file) {
             console.log("[DEBUG] Données reçues de l'API :", data);
 
             displayResults(data);
+            if (data.uuid) {
+                setTimeout(() => fetchDistributions(data.uuid), 2000);  // petit délai pour laisser respirer le backend
+            }
         } else {
             alert("Erreur lors du téléchargement du fichier.");
         }
@@ -129,6 +132,47 @@ function displayResults(data) {
     }
 }
 
+function renderDistributions(distributions) {
+    const zone = document.getElementById("distribution-zone");
+    if (!zone) {
+        console.warn("[WARN] Élément #distribution-zone manquant.");
+        return;
+    }
+
+    let html = "<h3>Variabilité des paramètres (10 essais)</h3>";
+    for (const method in distributions) {
+        const values = distributions[method];
+        if (!values || !values.length) continue;
+
+        html += `<div style="margin-bottom:1em;"><strong>${method.toUpperCase()}</strong><br>`;
+        const stats = aggregateStats(values);
+        for (const param in stats) {
+            const { min, max, avg } = stats[param];
+            html += `${param} → min: ${min.toFixed(3)}, max: ${max.toFixed(3)}, moy: ${avg.toFixed(3)}<br>`;
+        }
+        html += "</div>";
+    }
+
+    zone.innerHTML = html;
+}
+
+function aggregateStats(paramList) {
+    const keys = Object.keys(paramList[0]);
+    const stats = {};
+
+    for (const key of keys) {
+        const values = paramList.map(obj => parseFloat(obj[key])).filter(v => !isNaN(v));
+        const avg = values.reduce((a, b) => a + b, 0) / values.length;
+        stats[key] = {
+            min: Math.min(...values),
+            max: Math.max(...values),
+            avg
+        };
+    }
+
+    return stats;
+}
+
 function openDetailsModal(method) {
     const modal = document.getElementById("details-modal");
     const body = document.getElementById("modal-body");
@@ -166,3 +210,15 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 });
+
+async function fetchDistributions(fileId) {
+    const url = `https://clementgerard-polyfit.hf.space/predict-distribution?id=${fileId}`;
+    try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error("Erreur lors de la récupération des distributions");
+        const data = await response.json();
+        console.log("[DEBUG] Données de distributions :", data);
+        renderDistributions(data.distributions);
+    } catch (error) {
+        console.error("[ERROR] Distribution fetch failed:", error);
+    }
