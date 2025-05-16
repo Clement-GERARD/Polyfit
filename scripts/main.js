@@ -222,3 +222,4 @@ async function fetchDistributions(fileId) {
     } catch (error) {
         console.error("[ERROR] Distribution fetch failed:", error);
     }
+}
