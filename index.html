@@ -1,171 +1,198 @@
 <!DOCTYPE html>
-<html lang="fr">
-<head>
+ <html lang="fr">
+ <head>
   <meta charset="UTF-8">
   <title>Polyfit AI – Analyse photovoltaïque</title>
   <link rel="stylesheet" href="style/main.css">
   <link rel="icon" href="favicon.ico" type="image/x-icon">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-</head>
-<body>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-boxplot@1.3.1/dist/chartjs-plugin-boxplot.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js" integrity="sha512-c3Mig60j9XrBpX30lHQDtm9jvd6oq606nUrJ0gjXsv9FQzEr7j7B9OaoE29c8qyKx6YFm15rQ897M2KXu4UqiQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="sha512-BNaRQnYJYi5fzOYy5c6idq9jqqhikZFRppc1HeysgtU4lSeGy9gy40wdSjc4Q9tqtKeqnqQjLCUjJzypZrFdtw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+ </head>
+ <body>
 
-  <!-- En-tête -->
   <header class="header">
-    <div class="logo-container">
-      <img src="assets/logo.png" alt="Logo Polyfit AI" class="logo">
-    </div>
-    <div class="title-container">
-      <h1 class="main-title">I-V CURVES</h1>
-      <h2 class="subtitle">Polytech Nantes</h2>
-    </div>
+  <div class="logo-container">
+  <img src="assets/logo.png" alt="Logo Polyfit AI" class="logo">
+  </div>
+  <div class="title-container">
+  <h1 class="main-title">I-V CURVES</h1>
+  <h2 class="subtitle">Polytech Nantes</h2>
+  </div>
   </header>
 
-  <!-- Upload et options d'affichage -->
   <section id="upload-section">
-    <div class="upload-controls">
-      <input type="file" id="file-input" multiple accept=".csv">
-      <label for="file-input">📁 Sélectionner des fichiers CSV</label>
-      
-      <div class="display-toggle">
-        <input type="checkbox" id="display-mode" class="toggle-checkbox">
-        <label for="display-mode" class="toggle-label">Affichage brut</label>
-      </div>
-      
-      <div class="status-container">
-        <span class="status-label">Statut :</span>
-        <span id="processing-status" class="status-badge status-waiting">En attente</span>
-      </div>
-    </div>
-    
-    <div class="file-info">
-      <span class="file-label">Fichier actuel :</span>
-      <span id="current-file">Aucun fichier sélectionné</span>
-    </div>
+  <div class="upload-controls">
+  <input type="file" id="file-input" multiple accept=".csv">
+  <label for="file-input">📁 Sélectionner des fichiers CSV</label>
+
+  <div class="display-toggle">
+  <input type="checkbox" id="display-mode" class="toggle-checkbox">
+  <label for="display-mode" class="toggle-label">Affichage brut</label>
+  </div>
+
+  <div class="status-container">
+  <span class="status-label">Statut :</span>
+  <span id="processing-status" class="status-badge status-waiting">En attente</span>
+  </div>
+
+  <div class="color-theme-selector">
+  <button id="toggle-theme-btn">🎨 Changer le thème</button>
+  </div>
+  </div>
+
+  <div class="file-info">
+  <span class="file-label">Fichier actuel :</span>
+  <span id="current-file">Aucun fichier sélectionné</span>
+  </div>
   </section>
 
-  <!-- Contenu principal - Mode normal -->
   <main id="normal-display" class="main-container">
-    <!-- Zone graphique -->
-    <div class="left-panel">
-      <div class="result-card" id="graph-zone">
-        <h2>📊 Visualisation des courbes</h2>
-        <div class="content-placeholder">Aucun fichier chargé</div>
-      </div>
-    </div>
+  <div class="left-panel">
+  <div class="result-card" id="graph-zone">
+  <h2>📊 Visualisation des courbes</h2>
+  <div class="content-placeholder">Aucun fichier chargé</div>
+  </div>
+  </div>
 
-    <!-- Zone de prédictions -->
-    <div class="right-panel">
-      <div class="result-card" id="random-method">
-        <h2>🎲 Méthode Classique</h2>
-        <div class="content-placeholder">En attente d'analyse</div>
-        <button class="details-btn" data-method="rand">Précisions</button>
-      </div>
-
-      <div class="result-card" id="mlp-method">
-        <h2>🧠 Prédiction MLP</h2>
-        <div class="content-placeholder">En attente d'analyse</div>
-        <button class="details-btn" data-method="mlp">Précisions</button>
-      </div>
-
-      <div class="result-card" id="cnn-method">
-        <h2>🧠 Prédiction CNN</h2>
-        <div class="content-placeholder">En attente d'analyse</div>
-        <button class="details-btn" data-method="cnn">Précisions</button>
-      </div>
-
-      <div class="result-card" id="genetic-method">
-        <h2>🧬 Algorithme génétique</h2>
-        <div class="content-placeholder">En attente d'analyse</div>
-        <button class="details-btn" data-method="gen">Précisions</button>
-      </div>
-    </div>
+  <div class="right-panel">
+  <div class="result-card" id="random-method">
+  <h2>🎲 Méthode Classique</h2>
+  <div class="content-placeholder">En attente d'analyse</div>
+  <button class="details-btn" data-method="rand">Préc...</button>
+  </div>
+  <div class="result-card" id="mlp-method">
+  <h2>🧠 Méthode MLP</h2>
+  <div class="content-placeholder">En attente d'analyse</div>
+  <button class="details-btn" data-method="mlp">Préc...</button>
+  </div>
+  <div class="result-card" id="cnn-method">
+  <h2>⚡️ Méthode CNN</h2>
+  <div class="content-placeholder">En attente d'analyse</div>
+  <button class="details-btn" data-method="cnn">Préc...</button>
+  </div>
+  <div class="result-card" id="genetic-method">
+  <h2>🧬 Méthode Génétique</h2>
+  <div class="content-placeholder">En attente d'analyse</div>
+  <button class="details-btn" data-method="gen">Préc...</button>
+  </div>
+  </div>
   </main>
 
-  <!-- Contenu principal - Mode brut -->
   <main id="raw-display" class="main-container hidden">
-    <div class="full-width-panel">
-      <div class="result-card">
-        <h2>📋 Tableau comparatif des méthodes</h2>
-        <div class="table-container">
-          <table id="comparison-table">
-            <thead>
-              <tr>
-                <th>Paramètre</th>
-                <th>Méthode Classique</th>
-                <th>MLP</th>
-                <th>CNN</th>
-                <th>Génétique</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>J0</td>
-                <td class="rand-J0">-</td>
-                <td class="mlp-J0">-</td>
-                <td class="cnn-J0">-</td>
-                <td class="gen-J0">-</td>
-              </tr>
-              <tr>
-                <td>Jph</td>
-                <td class="rand-Jph">-</td>
-                <td class="mlp-Jph">-</td>
-                <td class="cnn-Jph">-</td>
-                <td class="gen-Jph">-</td>
-              </tr>
-              <tr>
-                <td>Rs</td>
-                <td class="rand-Rs">-</td>
-                <td class="mlp-Rs">-</td>
-                <td class="cnn-Rs">-</td>
-                <td class="gen-Rs">-</td>
-              </tr>
-              <tr>
-                <td>Rsh</td>
-                <td class="rand-Rsh">-</td>
-                <td class="mlp-Rsh">-</td>
-                <td class="cnn-Rsh">-</td>
-                <td class="gen-Rsh">-</td>
-              </tr>
-              <tr>
-                <td>n</td>
-                <td class="rand-n">-</td>
-                <td class="mlp-n">-</td>
-                <td class="cnn-n">-</td>
-                <td class="gen-n">-</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-      
-      <div class="result-card" id="boxplot-zone">
-        <h2>📊 Distribution des paramètres</h2>
-        <div class="content-placeholder">En attente d'analyse</div>
-        <div class="boxplot-container">
-          <div class="boxplot" id="J0-boxplot"></div>
-          <div class="boxplot" id="Jph-boxplot"></div>
-          <div class="boxplot" id="Rs-boxplot"></div>
-          <div class="boxplot" id="Rsh-boxplot"></div>
-          <div class="boxplot" id="n-boxplot"></div>
-        </div>
-      </div>
-    </div>
+  <div class="raw-results">
+  <div class="result-card">
+  <h2>📈 Comparaison des paramètres</h2>
+  <div class="table-container">
+  <table id="comparison-table">
+  <thead>
+  <tr>
+  <th>Paramètre</th>
+  <th>Fit Classique</th>
+  <th>MLP</th>
+  <th>CNN</th>
+  <th>Génétique</th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr>
+  <td>J0</td>
+  <td class="rand-J0">-</td>
+  <td class="mlp-J0">-</td>
+  <td class="cnn-J0">-</td>
+  <td class="gen-J0">-</td>
+  </tr>
+  <tr>
+  <td>Jph</td>
+  <td class="rand-Jph">-</td>
+  <td class="mlp-Jph">-</td>
+  <td class="cnn-Jph">-</td>
+  <td class="gen-Jph">-</td>
+  </tr>
+  <tr>
+  <td>Rs</td>
+  <td class="rand-Rs">-</td>
+  <td class="mlp-Rs">-</td>
+  <td class="cnn-Rs">-</td>
+  <td class="gen-Rs">-</td>
+  </tr>
+  <tr>
+  <td>Rsh</td>
+  <td class="rand-Rsh">-</td>
+  <td class="mlp-Rsh">-</td>
+  <td class="cnn-Rsh">-</td>
+  <td class="gen-Rsh">-</td>
+  </tr>
+  <tr>
+  <td>n</td>
+  <td class="rand-n">-</td>
+  <td class="mlp-n">-</td>
+  <td class="cnn-n">-</td>
+  <td class="gen-n">-</td>
+  </tr>
+  <tr>
+  <td>SSD</td>
+  <td class="rand-SSD">-</td>
+  <td class="mlp-SSD">-</td>
+  <td class="cnn-SSD">-</td>
+  <td class="gen-SSD">-</td>
+  </tr>
+  </tbody>
+  </table>
+  </div>
+  </div>
+
+  <div class="result-card" id="boxplot-zone">
+  <h2>📊 Distribution des paramètres</h2>
+  <div class="content-placeholder">En attente d'analyse</div>
+  <div class="boxplot-container">
+  <div class="boxplot" id="J0-boxplot"></div>
+  <div class="boxplot" id="Jph-boxplot"></div>
+  <div class="boxplot" id="Rs-boxplot"></div>
+  <div class="boxplot" id="Rsh-boxplot"></div>
+  <div class="boxplot" id="n-boxplot"></div>
+  <div class="boxplot" id="SSD-boxplot"></div>
+  </div>
+  </div>
+
+  <div class="result-card" id="comparison-zone">
+  <h2>📈 Comparaison des fichiers</h2>
+  <div class="file-selector">
+  <select id="file-select-1"></select>
+  <select id="file-select-2"></select>
+  <button id="compare-btn">Comparer</button>
+  </div>
+  <div id="comparison-bar"></div>
+  </div>
+
+  <div class="result-card" id="export-zone">
+  <h2>Export</h2>
+  <button id="export-csv-btn">Exporter en CSV</button>
+  <button id="generate-pdf-btn">Générer un rapport PDF</button>
+  </div>
+  </div>
   </main>
 
   <footer>
-    <script src="scripts/main.js"></script>
-    <script src="scripts/ascii.js"></script>
+  <script src="scripts/main.js"></script>
+  <script src="scripts/ascii.js"></script>
   </footer>
-  
+
   <div id="details-modal" class="modal hidden">
-    <div class="modal-content">
-      <span id="modal-close">&times;</span>
-      <h3 id="modal-title">Détails de la méthode</h3>
-      <div id="distribution-zone" class="result-box"></div>
-      <div id="modal-body">
-        <p>Chargement...</p>
-      </div>
-    </div>
+  <div class="modal-content">
+  <span id="modal-close">&times;</span>
+  <h3 id="modal-title">Détails de la méthode</h3>
+  <div id="distribution-zone" class="result-box"></div>
+  <div id="curve-image-container"></div>
+  <div id="ssd-value"></div>
   </div>
-</body>
-</html>
+  </div>
+
+  <script src="scripts/main.js"></script>
+  <script src="scripts/boxplot.js"></script>
+  <script src="scripts/visualization.js"></script>
+ </body>
+ </html>
