@@ -7,6 +7,15 @@ const allResults = [];     // Stockage de tous les résultats pour les boîtes �
 let currentFileName = "";  // Nom du fichier en cours de traitement
 let charts = {};           // Stockage des instances de graphiques
 
+function toggleTheme() {
+    isDarkTheme = !isDarkTheme;
+    document.body.classList.toggle('dark-theme', isDarkTheme);
+    
+    // Mettre à jour le texte du bouton
+    const themeBtn = document.getElementById('toggle-theme-btn');
+    themeBtn.textContent = isDarkTheme ? '☀️ Thème clair' : '🌙 Thème sombre';
+}
+
 // Fonction pour basculer entre les modes d'affichage
 function toggleDisplayMode() {
     const isRawMode = document.getElementById('display-mode').checked;
