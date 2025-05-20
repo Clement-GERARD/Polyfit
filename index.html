@@ -3,7 +3,7 @@
  <head>
   <meta charset="UTF-8">
   <title>Polyfit AI – Analyse photovoltaïque</title>
-  <link rel="stylesheet" href="style/main.css">
+  <link rel="stylesheet" href="main.css">
   <link rel="icon" href="favicon.ico" type="image/x-icon">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
@@ -40,7 +40,7 @@
   </div>
 
   <div class="color-theme-selector">
-  <button id="toggle-theme-btn">🎨 Changer le thème</button>
+  <button id="toggle-theme-btn">🌙 Thème sombre</button>
   </div>
   </div>
 
@@ -62,22 +62,22 @@
   <div class="result-card" id="random-method">
   <h2>🎲 Méthode Classique</h2>
   <div class="content-placeholder">En attente d'analyse</div>
-  <button class="details-btn" data-method="rand">Préc...</button>
+  <button class="details-btn" data-method="rand">Détails</button>
   </div>
   <div class="result-card" id="mlp-method">
   <h2>🧠 Méthode MLP</h2>
   <div class="content-placeholder">En attente d'analyse</div>
-  <button class="details-btn" data-method="mlp">Préc...</button>
+  <button class="details-btn" data-method="mlp">Détails</button>
   </div>
   <div class="result-card" id="cnn-method">
   <h2>⚡️ Méthode CNN</h2>
   <div class="content-placeholder">En attente d'analyse</div>
-  <button class="details-btn" data-method="cnn">Préc...</button>
+  <button class="details-btn" data-method="cnn">Détails</button>
   </div>
   <div class="result-card" id="genetic-method">
   <h2>🧬 Méthode Génétique</h2>
   <div class="content-placeholder">En attente d'analyse</div>
-  <button class="details-btn" data-method="gen">Préc...</button>
+  <button class="details-btn" data-method="gen">Détails</button>
   </div>
   </div>
   </main>
@@ -176,11 +176,6 @@
   </div>
   </main>
 
-  <footer>
-  <script src="scripts/main.js"></script>
-  <script src="scripts/ascii.js"></script>
-  </footer>
-
   <div id="details-modal" class="modal hidden">
   <div class="modal-content">
   <span id="modal-close">&times;</span>
@@ -191,8 +186,8 @@
   </div>
   </div>
 
-  <script src="scripts/main.js"></script>
-  <script src="scripts/boxplot.js"></script>
-  <script src="scripts/visualization.js"></script>
+  <script src="main.js"></script>
+  <script src="boxplot.js"></script>
+  <script src="visualization.js"></script>
  </body>
  </html>
