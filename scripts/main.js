@@ -270,7 +270,7 @@ function displayResults(data) {
         `);
         resultDetails["mlp"] = {
             params: data.params_mlp,
-            ssd: data.ssd_mlp || null
+            ssd: data.ssd_mlp || null,
             image: data.curve_image_mlp || null
         };
     }
@@ -286,7 +286,7 @@ function displayResults(data) {
         `);
         resultDetails["cnn"] = {
             params: data.params_cnn,
-            ssd: data.ssd_cnn || null
+            ssd: data.ssd_cnn || null,
             image: data.curve_image_cnn || null
         };
     }
@@ -302,7 +302,7 @@ function displayResults(data) {
         `);
         resultDetails["gen"] = {
             params: data.params_genetique,
-            ssd: data.ssd_gen || null
+            ssd: data.ssd_gen || null,
             image: data.curve_image_gen || null
         };
     }
@@ -318,7 +318,7 @@ function displayResults(data) {
         `);
         resultDetails["rand"] = {
             params: data.params_random,
-            ssd: data.ssd_rand || null
+            ssd: data.ssd_rand || null,
             image: data.curve_image_rand || null
         };
     }
