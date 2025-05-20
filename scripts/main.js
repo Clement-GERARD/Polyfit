@@ -17,54 +17,6 @@ function toggleTheme() {
     themeBtn.textContent = isDarkTheme ? '☀️ Thème clair' : '🌙 Thème sombre';
 }
 
-// Fonction pour ouvrir la modal de détails
-function openDetailsModal(method) {
-    const modal = document.getElementById('details-modal');
-    const distributionZone = document.getElementById('distribution-zone');
-    const curveImageContainer = document.getElementById('curve-image-container');
-    const ssdValue = document.getElementById('ssd-value');
-    const title = document.getElementById('modal-title');
-
-    const details = resultDetails[method];
-
-    if (!details || !details.params) {
-        console.warn("[WARN] Données manquantes pour la méthode :", method, details);
-        distributionZone.innerHTML = "<p>Aucune donnée disponible pour cette méthode.</p>";
-        curveImageContainer.innerHTML = "";
-        ssdValue.innerHTML = "";
-    } else {
-        title.textContent = `Détails – ${methodToName(method)}`;
-        
-        // Afficher les paramètres
-        let paramsHTML = '<table class="params-table">';
-        paramsHTML += '<tr><th>Paramètre</th><th>Valeur</th></tr>';
-        paramsHTML += `<tr><td>J0</td><td>${formatNumber(details.params.J0)}</td></tr>`;
-        paramsHTML += `<tr><td>Jph</td><td>${formatNumber(details.params.Jph)}</td></tr>`;
-        paramsHTML += `<tr><td>Rs</td><td>${formatNumber(details.params.Rs)}</td></tr>`;
-        paramsHTML += `<tr><td>Rsh</td><td>${formatNumber(details.params.Rsh)}</td></tr>`;
-        paramsHTML += `<tr><td>n</td><td>${formatNumber(details.params.n)}</td></tr>`;
-        paramsHTML += '</table>';
-        
-        distributionZone.innerHTML = paramsHTML;
-        
-        // Afficher l'image si disponible
-        if (details.image) {
-            curveImageContainer.innerHTML = `<img src="data:image/png;base64,${details.image}" alt="Courbe ${method}" style="width:100%; margin-top:15px; border-radius:8px;">`;
-        } else {
-            curveImageContainer.innerHTML = "";
-        }
-        
-        // Afficher le SSD si disponible
-        if (details.ssd !== null && details.ssd !== undefined) {
-            ssdValue.innerHTML = `<div class="ssd-display">SSD: <span class="ssd-value">${formatNumber(details.ssd)}</span></div>`;
-        } else {
-            ssdValue.innerHTML = "";
-        }
-    }
-
-    modal.classList.remove("hidden");
-}
-
 // Fonction pour basculer entre les modes d'affichage
 function toggleDisplayMode() {
     const isRawMode = document.getElementById('display-mode').checked;
@@ -754,3 +706,29 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById('toggle-theme-btn').addEventListener('click', toggleColorTheme);
     }
 });
+
+function openDetailsModal(method) {
+    const modal = document.getElementById("details-modal");
+    const body = document.getElementById("modal-body");
+    const title = document.getElementById("modal-title");
+
+    const details = resultDetails[method];
+
+    if (!details || !details.params || !details.image) {
+        console.warn("[WARN] Données manquantes pour la méthode :", method, details);
+        body.innerHTML = "<p>Aucune donnée disponible pour cette méthode.</p>";
+    } else {
+        title.textContent = `Détails – ${methodToName(method)}`;
+        body.innerHTML = `
+            <p><strong>J0 :</strong> ${details.params.J0}</p>
+            <p><strong>Jph :</strong> ${details.params.Jph}</p>
+            <p><strong>Rs :</strong> ${details.params.Rs}</p>
+            <p><strong>Rsh :</strong> ${details.params.Rsh}</p>
+            <p><strong>n :</strong> ${details.params.n}</p>
+            ${details.ssd ? `<p><strong>SSD :</strong> ${formatNumber(details.ssd)}</p>` : ''}
+            <img src="data:image/png;base64,${details.image}" alt="Courbe ${method}" style="width:100%; margin-top:15px; border-radius:8px;">
+        `;
+    }
+
+    modal.classList.remove("hidden");
+}
