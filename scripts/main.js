@@ -658,21 +658,26 @@ function toggleColorTheme() {
     }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-    // Initialiser Chart.js avec les plugins nécessaires
-    if (typeof Chart !== 'undefined') {
-        Chart.register(...registerables);
-    }
+// Initialiser les écouteurs d'événements pour les boutons de détails
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialiser les filtres et tris
+    initializeFiltersAndSorting();
     
-    document.getElementById("modal-close").addEventListener("click", () => {
-        document.getElementById("details-modal").classList.add("hidden");
-    });
-
-    document.querySelectorAll(".details-btn").forEach(btn => {
-        btn.addEventListener("click", () => {
-            const method = btn.getAttribute("data-method");
+    // Initialiser la comparaison de fichiers
+    initializeFileComparison();
+    
+    // Écouteurs pour les boutons de détails
+    const detailsButtons = document.querySelectorAll('.details-btn');
+    detailsButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const method = this.getAttribute('data-method');
             openDetailsModal(method);
         });
+    });
+    
+    // Écouteur pour fermer la modal
+    document.getElementById('modal-close').addEventListener('click', function() {
+        document.getElementById('details-modal').classList.add('hidden');
     });
     
     // Ajouter un gestionnaire pour traiter plusieurs fichiers
