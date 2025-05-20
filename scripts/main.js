@@ -267,12 +267,11 @@ function displayResults(data) {
             Rs: ${data.params_mlp.Rs}<br>
             Rsh: ${data.params_mlp.Rsh}<br>
             n: ${data.params_mlp.n}
-            ${data.ssd_mlp ? '<br><strong>SSD: ' + formatNumber(data.ssd_mlp) + '</strong>' : ''}
         `);
         resultDetails["mlp"] = {
             params: data.params_mlp,
-            image: data.curve_image_mlp || null,
             ssd: data.ssd_mlp || null
+            image: data.curve_image_mlp || null
         };
     }
 
@@ -284,12 +283,11 @@ function displayResults(data) {
             Rs: ${data.params_cnn.Rs}<br>
             Rsh: ${data.params_cnn.Rsh}<br>
             n: ${data.params_cnn.n}
-            ${data.ssd_cnn ? '<br><strong>SSD: ' + formatNumber(data.ssd_cnn) + '</strong>' : ''}
         `);
         resultDetails["cnn"] = {
             params: data.params_cnn,
-            image: data.curve_image_cnn || null,
             ssd: data.ssd_cnn || null
+            image: data.curve_image_cnn || null
         };
     }
 
@@ -301,12 +299,11 @@ function displayResults(data) {
             Rs: ${data.params_genetique.Rs}<br>
             Rsh: ${data.params_genetique.Rsh}<br>
             n: ${data.params_genetique.n}
-            ${data.ssd_genetique ? '<br><strong>SSD: ' + formatNumber(data.ssd_genetique) + '</strong>' : ''}
         `);
         resultDetails["gen"] = {
             params: data.params_genetique,
-            image: data.curve_image_gen || null,
-            ssd: data.ssd_genetique || null
+            ssd: data.ssd_gen || null
+            image: data.curve_image_gen || null
         };
     }
 
@@ -318,12 +315,11 @@ function displayResults(data) {
             Rs: ${data.params_random.Rs}<br>
             Rsh: ${data.params_random.Rsh}<br>
             n: ${data.params_random.n}
-            ${data.ssd_random ? '<br><strong>SSD: ' + formatNumber(data.ssd_random) + '</strong>' : ''}
         `);
         resultDetails["rand"] = {
             params: data.params_random,
-            image: data.curve_image_rand || null,
-            ssd: data.ssd_random || null
+            ssd: data.ssd_rand || null
+            image: data.curve_image_rand || null
         };
     }
 
