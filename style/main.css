@@ -139,7 +139,6 @@ body {
   left: 2px;
   border-radius: 50%;
   transition: transform 0.3s;
-  top: 2px;
  }
 
  .toggle-checkbox:checked + .toggle-label:before {
