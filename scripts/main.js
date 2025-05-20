@@ -660,6 +660,12 @@ function toggleColorTheme() {
 
 // Initialiser les écouteurs d'événements pour les boutons de détails
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialiser les filtres et tris
+    initializeFiltersAndSorting();
+    
+    // Initialiser la comparaison de fichiers
+    initializeFileComparison();
+    
     // Écouteurs pour les boutons de détails
     const detailsButtons = document.querySelectorAll('.details-btn');
     detailsButtons.forEach(button => {
@@ -674,59 +680,62 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('details-modal').classList.add('hidden');
     });
     
-    // Ajouter un gestionnaire pour traiter plusieurs fichiers
-    document.getElementById('file-input').addEventListener('change', (event) => {
-        const files = event.target.files;
-        if (files.length > 1) {
-            const confirmBatch = confirm(`Vous avez sélectionné ${files.length} fichiers. Voulez-vous les traiter tous en séquence?`);
-            
-            if (confirmBatch) {
-                processBatchFiles(files);
-            } else {
-                // Sinon, traiter juste le premier fichier comme d'habitude
-                handleFiles(event);
-            }
-        } else {
-            // Un seul fichier, comportement normal
-            handleFiles(event);
-        }
-    });
-    
-    // Ajouter les nouveaux boutons de fonctionnalités
-    if (document.getElementById('export-csv-btn')) {
-        document.getElementById('export-csv-btn').addEventListener('click', exportResultsToCSV);
+    // Écouteur pour le bouton d'export PDF
+    const pdfButton = document.getElementById('generate-pdf-btn');
+    if (pdfButton) {
+        pdfButton.addEventListener('click', generatePDF);
     }
     
-    if (document.getElementById('generate-pdf-btn')) {
-        document.getElementById('generate-pdf-btn').addEventListener('click', generatePDFReport);
-    }
-    
-    if (document.getElementById('toggle-theme-btn')) {
-        document.getElementById('toggle-theme-btn').addEventListener('click', toggleColorTheme);
+    // Écouteur pour le bouton d'export CSV
+    const csvButton = document.getElementById('export-csv-btn');
+    if (csvButton) {
+        csvButton.addEventListener('click', exportCSV);
     }
 });
 
+// Fonction pour ouvrir la modal de détails
 function openDetailsModal(method) {
-    const modal = document.getElementById("details-modal");
-    const body = document.getElementById("modal-body");
-    const title = document.getElementById("modal-title");
+    const modal = document.getElementById('details-modal');
+    const distributionZone = document.getElementById('distribution-zone');
+    const curveImageContainer = document.getElementById('curve-image-container');
+    const ssdValue = document.getElementById('ssd-value');
+    const title = document.getElementById('modal-title');
 
     const details = resultDetails[method];
 
-    if (!details || !details.params || !details.image) {
+    if (!details || !details.params) {
         console.warn("[WARN] Données manquantes pour la méthode :", method, details);
-        body.innerHTML = "<p>Aucune donnée disponible pour cette méthode.</p>";
+        distributionZone.innerHTML = "<p>Aucune donnée disponible pour cette méthode.</p>";
+        curveImageContainer.innerHTML = "";
+        ssdValue.innerHTML = "";
     } else {
         title.textContent = `Détails – ${methodToName(method)}`;
-        body.innerHTML = `
-            <p><strong>J0 :</strong> ${details.params.J0}</p>
-            <p><strong>Jph :</strong> ${details.params.Jph}</p>
-            <p><strong>Rs :</strong> ${details.params.Rs}</p>
-            <p><strong>Rsh :</strong> ${details.params.Rsh}</p>
-            <p><strong>n :</strong> ${details.params.n}</p>
-            ${details.ssd ? `<p><strong>SSD :</strong> ${formatNumber(details.ssd)}</p>` : ''}
-            <img src="data:image/png;base64,${details.image}" alt="Courbe ${method}" style="width:100%; margin-top:15px; border-radius:8px;">
-        `;
+        
+        // Afficher les paramètres
+        let paramsHTML = '<table class="params-table">';
+        paramsHTML += '<tr><th>Paramètre</th><th>Valeur</th></tr>';
+        paramsHTML += `<tr><td>J0</td><td>${formatNumber(details.params.J0)}</td></tr>`;
+        paramsHTML += `<tr><td>Jph</td><td>${formatNumber(details.params.Jph)}</td></tr>`;
+        paramsHTML += `<tr><td>Rs</td><td>${formatNumber(details.params.Rs)}</td></tr>`;
+        paramsHTML += `<tr><td>Rsh</td><td>${formatNumber(details.params.Rsh)}</td></tr>`;
+        paramsHTML += `<tr><td>n</td><td>${formatNumber(details.params.n)}</td></tr>`;
+        paramsHTML += '</table>';
+        
+        distributionZone.innerHTML = paramsHTML;
+        
+        // Afficher l'image si disponible
+        if (details.image) {
+            curveImageContainer.innerHTML = `<img src="data:image/png;base64,${details.image}" alt="Courbe ${method}" style="width:100%; margin-top:15px; border-radius:8px;">`;
+        } else {
+            curveImageContainer.innerHTML = "";
+        }
+        
+        // Afficher le SSD si disponible
+        if (details.ssd !== null && details.ssd !== undefined) {
+            ssdValue.innerHTML = `<div class="ssd-display">SSD: <span class="ssd-value">${formatNumber(details.ssd)}</span></div>`;
+        } else {
+            ssdValue.innerHTML = "";
+        }
     }
 
     modal.classList.remove("hidden");
