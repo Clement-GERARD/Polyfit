@@ -660,12 +660,6 @@ function toggleColorTheme() {
 
 // Initialiser les écouteurs d'événements pour les boutons de détails
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialiser les filtres et tris
-    initializeFiltersAndSorting();
-    
-    // Initialiser la comparaison de fichiers
-    initializeFileComparison();
-    
     // Écouteurs pour les boutons de détails
     const detailsButtons = document.querySelectorAll('.details-btn');
     detailsButtons.forEach(button => {
