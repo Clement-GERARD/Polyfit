@@ -337,10 +337,6 @@ body {
   z-index: 999;
  }
 
- .modal.hidden {
-  display: none;
- }
-
  .modal-content {
   background: var(--bg-color);
   padding: 20px;
