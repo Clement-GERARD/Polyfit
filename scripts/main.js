@@ -599,32 +599,6 @@ function methodToName(methodKey) {
     }
 }
 
-function openDetailsModal(method) {
-    const modal = document.getElementById("details-modal");
-    const body = document.getElementById("modal-body");
-    const title = document.getElementById("modal-title");
-
-    const details = resultDetails[method];
-
-    if (!details || !details.params || !details.image) {
-        console.warn("[WARN] Données manquantes pour la méthode :", method, details);
-        body.innerHTML = "<p>Aucune donnée disponible pour cette méthode.</p>";
-    } else {
-        title.textContent = `Détails – ${methodToName(method)}`;
-        body.innerHTML = `
-            <p><strong>J0 :</strong> ${details.params.J0}</p>
-            <p><strong>Jph :</strong> ${details.params.Jph}</p>
-            <p><strong>Rs :</strong> ${details.params.Rs}</p>
-            <p><strong>Rsh :</strong> ${details.params.Rsh}</p>
-            <p><strong>n :</strong> ${details.params.n}</p>
-            ${details.ssd ? `<p><strong>SSD :</strong> ${formatNumber(details.ssd)}</p>` : ''}
-            <img src="data:image/png;base64,${details.image}" alt="Courbe ${method}" style="width:100%; margin-top:15px; border-radius:8px;">
-        `;
-    }
-
-    modal.classList.remove("hidden");
-}
-
 // Permettre le traitement batch des fichiers
 function processBatchFiles(files) {
     if (!files || files.length === 0) return;
