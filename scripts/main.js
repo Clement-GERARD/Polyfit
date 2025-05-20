@@ -1,5 +1,6 @@
 document.getElementById('file-input').addEventListener('change', handleFiles);
 document.getElementById('display-mode').addEventListener('change', toggleDisplayMode);
+document.getElementById('toggle-theme-btn').addEventListener('click', toggleTheme);
 
 const resultDetails = {};  // Stockage des résultats par méthode
 const allResults = [];     // Stockage de tous les résultats pour les boîtes à moustaches
