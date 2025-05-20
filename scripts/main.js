@@ -7,16 +7,6 @@ const allResults = [];     // Stockage de tous les résultats pour les boîtes �
 let currentFileName = "";  // Nom du fichier en cours de traitement
 let charts = {};           // Stockage des instances de graphiques
 
-// Fonction pour jouer avec le thème de la page
-function toggleTheme() {
-    isDarkTheme = !isDarkTheme;
-    document.body.classList.toggle('dark-theme', isDarkTheme);
-    
-    // Mettre à jour le texte du bouton
-    const themeBtn = document.getElementById('toggle-theme-btn');
-    themeBtn.textContent = isDarkTheme ? '☀️ Thème clair' : '🌙 Thème sombre';
-}
-
 // Fonction pour basculer entre les modes d'affichage
 function toggleDisplayMode() {
     const isRawMode = document.getElementById('display-mode').checked;
@@ -241,11 +231,12 @@ function displayResults(data) {
             Rs: ${data.params_mlp.Rs}<br>
             Rsh: ${data.params_mlp.Rsh}<br>
             n: ${data.params_mlp.n}
+            ${data.ssd_mlp ? '<br><strong>SSD: ' + formatNumber(data.ssd_mlp) + '</strong>' : ''}
         `);
         resultDetails["mlp"] = {
             params: data.params_mlp,
-            ssd: data.ssd_mlp || null,
-            image: data.curve_image_mlp || null
+            image: data.curve_image_mlp || null,
+            ssd: data.ssd_mlp || null
         };
     }
 
@@ -257,11 +248,12 @@ function displayResults(data) {
             Rs: ${data.params_cnn.Rs}<br>
             Rsh: ${data.params_cnn.Rsh}<br>
             n: ${data.params_cnn.n}
+            ${data.ssd_cnn ? '<br><strong>SSD: ' + formatNumber(data.ssd_cnn) + '</strong>' : ''}
         `);
         resultDetails["cnn"] = {
             params: data.params_cnn,
-            ssd: data.ssd_cnn || null,
-            image: data.curve_image_cnn || null
+            image: data.curve_image_cnn || null,
+            ssd: data.ssd_cnn || null
         };
     }
 
@@ -273,11 +265,12 @@ function displayResults(data) {
             Rs: ${data.params_genetique.Rs}<br>
             Rsh: ${data.params_genetique.Rsh}<br>
             n: ${data.params_genetique.n}
+            ${data.ssd_genetique ? '<br><strong>SSD: ' + formatNumber(data.ssd_genetique) + '</strong>' : ''}
         `);
         resultDetails["gen"] = {
             params: data.params_genetique,
-            ssd: data.ssd_gen || null,
-            image: data.curve_image_gen || null
+            image: data.curve_image_gen || null,
+            ssd: data.ssd_genetique || null
         };
     }
 
@@ -289,11 +282,12 @@ function displayResults(data) {
             Rs: ${data.params_random.Rs}<br>
             Rsh: ${data.params_random.Rsh}<br>
             n: ${data.params_random.n}
+            ${data.ssd_random ? '<br><strong>SSD: ' + formatNumber(data.ssd_random) + '</strong>' : ''}
         `);
         resultDetails["rand"] = {
             params: data.params_random,
-            ssd: data.ssd_rand || null,
-            image: data.curve_image_rand || null
+            image: data.curve_image_rand || null,
+            ssd: data.ssd_random || null
         };
     }
 
@@ -569,6 +563,36 @@ function methodToName(methodKey) {
     }
 }
 
+function openDetailsModal(method) {
+    const modal = document.getElementById('details-modal');
+    const distributionZone = document.getElementById('distribution-zone');
+    const curveImageContainer = document.getElementById('curve-image-container');
+    const ssdValue = document.getElementById('ssd-value');
+    const title = document.getElementById('modal-title');
+
+    const details = resultDetails[method];
+
+    if (!details || !details.params || !details.image) {
+        console.warn("[WARN] Données manquantes pour la méthode :", method, details);
+        distributionZone.innerHTML = "<p>Aucune donnée disponible pour cette méthode.</p>";
+        curveImageContainer.innerHTML = "";
+        ssdValue.innerHTML = "";
+    } else {
+        title.textContent = `Détails – ${methodToName(method)}`;
+        body.innerHTML = `
+            <p><strong>J0 :</strong> ${details.params.J0}</p>
+            <p><strong>Jph :</strong> ${details.params.Jph}</p>
+            <p><strong>Rs :</strong> ${details.params.Rs}</p>
+            <p><strong>Rsh :</strong> ${details.params.Rsh}</p>
+            <p><strong>n :</strong> ${details.params.n}</p>
+            ${details.ssd ? `<p><strong>SSD :</strong> ${formatNumber(details.ssd)}</p>` : ''}
+            <img src="data:image/png;base64,${details.image}" alt="Courbe ${method}" style="width:100%; margin-top:15px; border-radius:8px;">
+        `;
+    }
+
+    modal.classList.remove("hidden");
+}
+
 // Permettre le traitement batch des fichiers
 function processBatchFiles(files) {
     if (!files || files.length === 0) return;
@@ -658,85 +682,48 @@ function toggleColorTheme() {
     }
 }
 
-// Initialiser les écouteurs d'événements pour les boutons de détails
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialiser les filtres et tris
-    initializeFiltersAndSorting();
+document.addEventListener("DOMContentLoaded", () => {
+
     
-    // Initialiser la comparaison de fichiers
-    initializeFileComparison();
-    
-    // Écouteurs pour les boutons de détails
-    const detailsButtons = document.querySelectorAll('.details-btn');
-    detailsButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const method = this.getAttribute('data-method');
+    document.getElementById("modal-close").addEventListener("click", () => {
+        document.getElementById("details-modal").classList.add("hidden");
+    });
+
+    document.querySelectorAll(".details-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const method = btn.getAttribute("data-method");
             openDetailsModal(method);
         });
     });
     
-    // Écouteur pour fermer la modal
-    document.getElementById('modal-close').addEventListener('click', function() {
-        document.getElementById('details-modal').classList.add('hidden');
+    // Ajouter un gestionnaire pour traiter plusieurs fichiers
+    document.getElementById('file-input').addEventListener('change', (event) => {
+        const files = event.target.files;
+        if (files.length > 1) {
+            const confirmBatch = confirm(`Vous avez sélectionné ${files.length} fichiers. Voulez-vous les traiter tous en séquence?`);
+            
+            if (confirmBatch) {
+                processBatchFiles(files);
+            } else {
+                // Sinon, traiter juste le premier fichier comme d'habitude
+                handleFiles(event);
+            }
+        } else {
+            // Un seul fichier, comportement normal
+            handleFiles(event);
+        }
     });
     
-    // Écouteur pour le bouton d'export PDF
-    const pdfButton = document.getElementById('generate-pdf-btn');
-    if (pdfButton) {
-        pdfButton.addEventListener('click', generatePDF);
+    // Ajouter les nouveaux boutons de fonctionnalités
+    if (document.getElementById('export-csv-btn')) {
+        document.getElementById('export-csv-btn').addEventListener('click', exportResultsToCSV);
     }
     
-    // Écouteur pour le bouton d'export CSV
-    const csvButton = document.getElementById('export-csv-btn');
-    if (csvButton) {
-        csvButton.addEventListener('click', exportCSV);
+    if (document.getElementById('generate-pdf-btn')) {
+        document.getElementById('generate-pdf-btn').addEventListener('click', generatePDFReport);
+    }
+    
+    if (document.getElementById('toggle-theme-btn')) {
+        document.getElementById('toggle-theme-btn').addEventListener('click', toggleColorTheme);
     }
 });
-
-// Fonction pour ouvrir la modal de détails
-function openDetailsModal(method) {
-    const modal = document.getElementById('details-modal');
-    const distributionZone = document.getElementById('distribution-zone');
-    const curveImageContainer = document.getElementById('curve-image-container');
-    const ssdValue = document.getElementById('ssd-value');
-    const title = document.getElementById('modal-title');
-
-    const details = resultDetails[method];
-
-    if (!details || !details.params) {
-        console.warn("[WARN] Données manquantes pour la méthode :", method, details);
-        distributionZone.innerHTML = "<p>Aucune donnée disponible pour cette méthode.</p>";
-        curveImageContainer.innerHTML = "";
-        ssdValue.innerHTML = "";
-    } else {
-        title.textContent = `Détails – ${methodToName(method)}`;
-        
-        // Afficher les paramètres
-        let paramsHTML = '<table class="params-table">';
-        paramsHTML += '<tr><th>Paramètre</th><th>Valeur</th></tr>';
-        paramsHTML += `<tr><td>J0</td><td>${formatNumber(details.params.J0)}</td></tr>`;
-        paramsHTML += `<tr><td>Jph</td><td>${formatNumber(details.params.Jph)}</td></tr>`;
-        paramsHTML += `<tr><td>Rs</td><td>${formatNumber(details.params.Rs)}</td></tr>`;
-        paramsHTML += `<tr><td>Rsh</td><td>${formatNumber(details.params.Rsh)}</td></tr>`;
-        paramsHTML += `<tr><td>n</td><td>${formatNumber(details.params.n)}</td></tr>`;
-        paramsHTML += '</table>';
-        
-        distributionZone.innerHTML = paramsHTML;
-        
-        // Afficher l'image si disponible
-        if (details.image) {
-            curveImageContainer.innerHTML = `<img src="data:image/png;base64,${details.image}" alt="Courbe ${method}" style="width:100%; margin-top:15px; border-radius:8px;">`;
-        } else {
-            curveImageContainer.innerHTML = "";
-        }
-        
-        // Afficher le SSD si disponible
-        if (details.ssd !== null && details.ssd !== undefined) {
-            ssdValue.innerHTML = `<div class="ssd-display">SSD: <span class="ssd-value">${formatNumber(details.ssd)}</span></div>`;
-        } else {
-            ssdValue.innerHTML = "";
-        }
-    }
-
-    modal.classList.remove("hidden");
-}
