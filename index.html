@@ -1,193 +1,433 @@
 <!DOCTYPE html>
- <html lang="fr">
- <head>
-  <meta charset="UTF-8">
-  <title>Polyfit AI – Analyse photovoltaïque</title>
-  <link rel="stylesheet" href="style/main.css">
-  <link rel="icon" href="favicon.ico" type="image/x-icon">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-boxplot@1.3.1/dist/chartjs-plugin-boxplot.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js" integrity="sha512-c3Mig60j9XrBpX30lHQDtm9jvd6oq606nUrJ0gjXsv9FQzEr7j7B9OaoE29c8qyKx6YFm15rQ897M2KXu4UqiQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="sha512-BNaRQnYJYi5fzOYy5c6idq9jqqhikZFRppc1HeysgtU4lSeGy9gy40wdSjc4Q9tqtKeqnqQjLCUjJzypZrFdtw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
- </head>
- <body>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Polyfit AI – Analyse photovoltaïque</title>
+    <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="theme_colors.css">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Bibliothèques externes -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-box-and-violin-plot@3.0.0/build/Chart.BoxPlot.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js" integrity="sha512-c3Mig60j9XrBpX30lHQDtm9jvd6oq606nUrJ0gjXsv9FQzEr7j7B9OaoE29c8qyKx6YFm15rQ897M2KXu4UqiQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="sha512-BNaRQnYJYi5fzOYy5c6idq9jqqhikZFRppc1HeysgtU4lSeGy9gy40wdSjc4Q9tqtKeqnqQjLCUjJzypZrFdtw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/qrcode.js@1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+    <header class="header">
+        <div class="logo-container">
+            <img src="Logo_Polyfit.png" alt="Logo Polyfit AI" class="logo">
+        </div>
+        <div class="title-container">
+            <h1 class="main-title">I-V CURVES</h1>
+            <h2 class="subtitle">Polytech Nantes</h2>
+        </div>
+        <div class="theme-controls">
+            <button id="toggle-theme-btn" class="theme-btn" title="Basculer entre thème clair et sombre">
+                <i class="fas fa-moon dark-icon"></i>
+                <i class="fas fa-sun light-icon"></i>
+            </button>
+            <button id="customize-colors-btn" class="theme-btn" title="Personnaliser les couleurs">
+                <i class="fas fa-palette"></i>
+            </button>
+        </div>
+    </header>
 
-  <header class="header">
-  <div class="logo-container">
-  <img src="assets/logo.png" alt="Logo Polyfit AI" class="logo">
-  </div>
-  <div class="title-container">
-  <h1 class="main-title">I-V CURVES</h1>
-  <h2 class="subtitle">Polytech Nantes</h2>
-  </div>
-  </header>
+    <section id="upload-section">
+        <div class="upload-controls">
+            <div class="file-upload-container">
+                <input type="file" id="file-input" multiple accept=".csv">
+                <label for="file-input" class="file-upload-btn">
+                    <i class="fas fa-file-upload"></i> Sélectionner des fichiers CSV
+                </label>
+                <button id="batch-mode-btn" class="action-button" title="Traiter plusieurs fichiers en lot">
+                    <i class="fas fa-layer-group"></i> Mode batch
+                </button>
+            </div>
 
-  <section id="upload-section">
-  <div class="upload-controls">
-  <input type="file" id="file-input" multiple accept=".csv">
-  <label for="file-input">📁 Sélectionner des fichiers CSV</label>
+            <div class="display-toggle">
+                <input type="checkbox" id="display-mode" class="toggle-checkbox">
+                <label for="display-mode" class="toggle-label">Affichage brut</label>
+            </div>
 
-  <div class="display-toggle">
-  <input type="checkbox" id="display-mode" class="toggle-checkbox">
-  <label for="display-mode" class="toggle-label">Affichage brut</label>
-  </div>
+            <div class="status-container">
+                <span class="status-label">Statut :</span>
+                <span id="processing-status" class="status-badge status-waiting">En attente</span>
+            </div>
+        </div>
 
-  <div class="status-container">
-  <span class="status-label">Statut :</span>
-  <span id="processing-status" class="status-badge status-waiting">En attente</span>
-  </div>
+        <div class="file-info">
+            <span class="file-label">Fichier actuel :</span>
+            <span id="current-file">Aucun fichier sélectionné</span>
+        </div>
 
-  <div class="color-theme-selector">
-  <button id="toggle-theme-btn">🌙 Thème sombre</button>
-  </div>
-  </div>
+        <div class="actions-container">
+            <button id="export-csv-btn" class="action-button network-dependent" title="Exporter les résultats au format CSV">
+                <i class="fas fa-file-csv"></i> CSV
+            </button>
+            <button id="export-excel-btn" class="action-button network-dependent" title="Exporter les résultats au format Excel">
+                <i class="fas fa-file-excel"></i> Excel
+            </button>
+            <button id="generate-pdf-btn" class="action-button network-dependent" title="Générer un rapport PDF">
+                <i class="fas fa-file-pdf"></i> PDF
+            </button>
+            <button id="share-results-btn" class="action-button network-dependent" title="Partager les résultats via URL">
+                <i class="fas fa-share-alt"></i> Partager
+            </button>
+            <button id="presentation-mode-btn" class="action-button" title="Mode présentation plein écran">
+                <i class="fas fa-tv"></i> Présentation
+            </button>
+        </div>
+    </section>
 
-  <div class="file-info">
-  <span class="file-label">Fichier actuel :</span>
-  <span id="current-file">Aucun fichier sélectionné</span>
-  </div>
-  </section>
+    <div class="filters-container">
+        <div class="filter-group">
+            <label for="method-filter">Méthode :</label>
+            <select id="method-filter">
+                <option value="all">Toutes</option>
+                <option value="rand">Classique</option>
+                <option value="mlp">MLP</option>
+                <option value="cnn">CNN</option>
+                <option value="gen">Génétique</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="param-filter">Paramètre :</label>
+            <select id="param-filter">
+                <option value="all">Tous</option>
+                <option value="J0">J0</option>
+                <option value="Jph">Jph</option>
+                <option value="Rs">Rs</option>
+                <option value="Rsh">Rsh</option>
+                <option value="n">n</option>
+                <option value="SSD">SSD</option>
+            </select>
+        </div>
+        <div class="filter-group range-filter">
+            <label for="min-value">Min :</label>
+            <input type="number" id="min-value" placeholder="Min">
+            <label for="max-value">Max :</label>
+            <input type="number" id="max-value" placeholder="Max">
+        </div>
+        <button id="apply-filters-btn" class="action-button">
+            <i class="fas fa-filter"></i> Appliquer les filtres
+        </button>
+        <button id="reset-filters-btn" class="action-button">
+            <i class="fas fa-undo"></i> Réinitialiser
+        </button>
+    </div>
 
-  <main id="normal-display" class="main-container">
-  <div class="left-panel">
-  <div class="result-card" id="graph-zone">
-  <h2>📊 Visualisation des courbes</h2>
-  <div class="content-placeholder">Aucun fichier chargé</div>
-  </div>
-  </div>
+    <main id="normal-display" class="main-container">
+        <div class="left-panel">
+            <div class="result-card" id="graph-zone">
+                <h2><i class="fas fa-chart-line"></i> Visualisation des courbes</h2>
+                <div class="content-placeholder">Sélectionnez un fichier pour afficher les courbes</div>
+                <div class="iv-chart-container">
+                    <canvas id="iv-chart"></canvas>
+                </div>
+                <div class="chart-controls">
+                    <div class="chart-legend" id="iv-chart-legend"></div>
+                    <div class="chart-options">
+                        <button id="customize-chart-btn" title="Personnaliser le graphique">
+                            <i class="fas fa-cog"></i>
+                        </button>
+                        <button id="download-chart-btn" title="Télécharger le graphique">
+                            <i class="fas fa-download"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-  <div class="right-panel">
-  <div class="result-card" id="random-method">
-  <h2>🎲 Méthode Classique</h2>
-  <div class="content-placeholder">En attente d'analyse</div>
-  <button class="details-btn" data-method="rand">Détails</button>
-  </div>
-  <div class="result-card" id="mlp-method">
-  <h2>🧠 Méthode MLP</h2>
-  <div class="content-placeholder">En attente d'analyse</div>
-  <button class="details-btn" data-method="mlp">Détails</button>
-  </div>
-  <div class="result-card" id="cnn-method">
-  <h2>⚡️ Méthode CNN</h2>
-  <div class="content-placeholder">En attente d'analyse</div>
-  <button class="details-btn" data-method="cnn">Détails</button>
-  </div>
-  <div class="result-card" id="genetic-method">
-  <h2>🧬 Méthode Génétique</h2>
-  <div class="content-placeholder">En attente d'analyse</div>
-  <button class="details-btn" data-method="gen">Détails</button>
-  </div>
-  </div>
-  </main>
+        <div class="right-panel">
+            <div class="result-card" id="random-method">
+                <h2><i class="fas fa-dice"></i> Méthode Classique</h2>
+                <div class="content-placeholder">Sélectionnez un fichier pour lancer l'analyse</div>
+                <div class="method-params"></div>
+                <div class="method-ssd"></div>
+                <button class="details-btn" data-method="rand">Détails <i class="fas fa-chevron-right"></i></button>
+            </div>
+            <div class="result-card" id="mlp-method">
+                <h2><i class="fas fa-brain"></i> Méthode MLP</h2>
+                <div class="content-placeholder">Sélectionnez un fichier pour lancer l'analyse</div>
+                <div class="method-params"></div>
+                <div class="method-ssd"></div>
+                <button class="details-btn" data-method="mlp">Détails <i class="fas fa-chevron-right"></i></button>
+            </div>
+            <div class="result-card" id="cnn-method">
+                <h2><i class="fas fa-bolt"></i> Méthode CNN</h2>
+                <div class="content-placeholder">Sélectionnez un fichier pour lancer l'analyse</div>
+                <div class="method-params"></div>
+                <div class="method-ssd"></div>
+                <button class="details-btn" data-method="cnn">Détails <i class="fas fa-chevron-right"></i></button>
+            </div>
+            <div class="result-card" id="genetic-method">
+                <h2><i class="fas fa-dna"></i> Méthode Génétique</h2>
+                <div class="content-placeholder">Sélectionnez un fichier pour lancer l'analyse</div>
+                <div class="method-params"></div>
+                <div class="method-ssd"></div>
+                <button class="details-btn" data-method="gen">Détails <i class="fas fa-chevron-right"></i></button>
+            </div>
+        </div>
+    </main>
 
-  <main id="raw-display" class="main-container hidden">
-  <div class="raw-results">
-  <div class="result-card">
-  <h2>📈 Comparaison des paramètres</h2>
-  <div class="table-container">
-  <table id="comparison-table">
-  <thead>
-  <tr>
-  <th>Paramètre</th>
-  <th>Fit Classique</th>
-  <th>MLP</th>
-  <th>CNN</th>
-  <th>Génétique</th>
-  </tr>
-  </thead>
-  <tbody>
-  <tr>
-  <td>J0</td>
-  <td class="rand-J0">-</td>
-  <td class="mlp-J0">-</td>
-  <td class="cnn-J0">-</td>
-  <td class="gen-J0">-</td>
-  </tr>
-  <tr>
-  <td>Jph</td>
-  <td class="rand-Jph">-</td>
-  <td class="mlp-Jph">-</td>
-  <td class="cnn-Jph">-</td>
-  <td class="gen-Jph">-</td>
-  </tr>
-  <tr>
-  <td>Rs</td>
-  <td class="rand-Rs">-</td>
-  <td class="mlp-Rs">-</td>
-  <td class="cnn-Rs">-</td>
-  <td class="gen-Rs">-</td>
-  </tr>
-  <tr>
-  <td>Rsh</td>
-  <td class="rand-Rsh">-</td>
-  <td class="mlp-Rsh">-</td>
-  <td class="cnn-Rsh">-</td>
-  <td class="gen-Rsh">-</td>
-  </tr>
-  <tr>
-  <td>n</td>
-  <td class="rand-n">-</td>
-  <td class="mlp-n">-</td>
-  <td class="cnn-n">-</td>
-  <td class="gen-n">-</td>
-  </tr>
-  <tr>
-  <td>SSD</td>
-  <td class="rand-SSD">-</td>
-  <td class="mlp-SSD">-</td>
-  <td class="cnn-SSD">-</td>
-  <td class="gen-SSD">-</td>
-  </tr>
-  </tbody>
-  </table>
-  </div>
-  </div>
+    <main id="raw-display" class="main-container hidden">
+        <div class="raw-results">
+            <div class="result-card">
+                <h2><i class="fas fa-table"></i> Comparaison des paramètres</h2>
+                <div class="table-container">
+                    <table id="comparison-table">
+                        <thead>
+                            <tr>
+                                <th data-sort="param">Paramètre <i class="fas fa-sort"></i></th>
+                                <th data-sort="rand">Fit Classique <i class="fas fa-sort"></i></th>
+                                <th data-sort="mlp">MLP <i class="fas fa-sort"></i></th>
+                                <th data-sort="cnn">CNN <i class="fas fa-sort"></i></th>
+                                <th data-sort="gen">Génétique <i class="fas fa-sort"></i></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>J0</td>
+                                <td class="rand-J0">-</td>
+                                <td class="mlp-J0">-</td>
+                                <td class="cnn-J0">-</td>
+                                <td class="gen-J0">-</td>
+                            </tr>
+                            <tr>
+                                <td>Jph</td>
+                                <td class="rand-Jph">-</td>
+                                <td class="mlp-Jph">-</td>
+                                <td class="cnn-Jph">-</td>
+                                <td class="gen-Jph">-</td>
+                            </tr>
+                            <tr>
+                                <td>Rs</td>
+                                <td class="rand-Rs">-</td>
+                                <td class="mlp-Rs">-</td>
+                                <td class="cnn-Rs">-</td>
+                                <td class="gen-Rs">-</td>
+                            </tr>
+                            <tr>
+                                <td>Rsh</td>
+                                <td class="rand-Rsh">-</td>
+                                <td class="mlp-Rsh">-</td>
+                                <td class="cnn-Rsh">-</td>
+                                <td class="gen-Rsh">-</td>
+                            </tr>
+                            <tr>
+                                <td>n</td>
+                                <td class="rand-n">-</td>
+                                <td class="mlp-n">-</td>
+                                <td class="cnn-n">-</td>
+                                <td class="gen-n">-</td>
+                            </tr>
+                            <tr>
+                                <td>SSD</td>
+                                <td class="rand-SSD">-</td>
+                                <td class="mlp-SSD">-</td>
+                                <td class="cnn-SSD">-</td>
+                                <td class="gen-SSD">-</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
 
-  <div class="result-card" id="boxplot-zone">
-  <h2>📊 Distribution des paramètres</h2>
-  <div class="content-placeholder">En attente d'analyse</div>
-  <div class="boxplot-container">
-  <div class="boxplot" id="J0-boxplot"></div>
-  <div class="boxplot" id="Jph-boxplot"></div>
-  <div class="boxplot" id="Rs-boxplot"></div>
-  <div class="boxplot" id="Rsh-boxplot"></div>
-  <div class="boxplot" id="n-boxplot"></div>
-  <div class="boxplot" id="SSD-boxplot"></div>
-  </div>
-  </div>
+            <div class="result-card" id="boxplot-zone">
+                <h2><i class="fas fa-chart-boxplot"></i> Distribution des paramètres</h2>
+                <div class="content-placeholder">Sélectionnez un fichier pour lancer l'analyse</div>
+                <div class="boxplot-container">
+                    <div class="boxplot" id="J0-boxplot"></div>
+                    <div class="boxplot" id="Jph-boxplot"></div>
+                    <div class="boxplot" id="Rs-boxplot"></div>
+                    <div class="boxplot" id="Rsh-boxplot"></div>
+                    <div class="boxplot" id="n-boxplot"></div>
+                    <div class="boxplot" id="SSD-boxplot"></div>
+                </div>
+            </div>
 
-  <div class="result-card" id="comparison-zone">
-  <h2>📈 Comparaison des fichiers</h2>
-  <div class="file-selector">
-  <select id="file-select-1"></select>
-  <select id="file-select-2"></select>
-  <button id="compare-btn">Comparer</button>
-  </div>
-  <div id="comparison-bar"></div>
-  </div>
+            <div class="result-card" id="radar-comparison">
+                <h2><i class="fas fa-chart-radar"></i> Comparaison radar des méthodes</h2>
+                <div class="radar-container">
+                    <canvas id="comparison-radar"></canvas>
+                </div>
+            </div>
 
-  <div class="result-card" id="export-zone">
-  <h2>Export</h2>
-  <button id="export-csv-btn">Exporter en CSV</button>
-  <button id="generate-pdf-btn">Générer un rapport PDF</button>
-  </div>
-  </div>
-  </main>
+            <div class="result-card" id="ssd-comparison">
+                <h2><i class="fas fa-chart-bar"></i> Comparaison des SSD</h2>
+                <div class="ssd-chart-container">
+                    <canvas id="ssd-chart"></canvas>
+                </div>
+            </div>
 
-  <div id="details-modal" class="modal hidden">
-  <div class="modal-content">
-  <span id="modal-close">&times;</span>
-  <h3 id="modal-title">Détails de la méthode</h3>
-  <div id="distribution-zone" class="result-box"></div>
-  <div id="curve-image-container"></div>
-  <div id="ssd-value"></div>
-  </div>
-  </div>
+            <div class="result-card" id="comparison-zone">
+                <h2><i class="fas fa-exchange-alt"></i> Comparaison des fichiers</h2>
+                <div class="file-selector">
+                    <div class="select-group">
+                        <label for="file-select-1">Fichier 1 :</label>
+                        <select id="file-select-1"></select>
+                    </div>
+                    <div class="select-group">
+                        <label for="file-select-2">Fichier 2 :</label>
+                        <select id="file-select-2"></select>
+                    </div>
+                    <button id="compare-btn" class="action-button">
+                        <i class="fas fa-search"></i> Comparer
+                    </button>
+                </div>
+                <div id="comparison-results" class="comparison-results">
+                    <div class="comparison-charts">
+                        <div class="comparison-chart-container">
+                            <canvas id="comparison-chart-1"></canvas>
+                        </div>
+                        <div class="comparison-chart-container">
+                            <canvas id="comparison-chart-2"></canvas>
+                        </div>
+                    </div>
+                    <div class="comparison-table-container">
+                        <table id="comparison-diff-table" class="comparison-table">
+                            <thead>
+                                <tr>
+                                    <th>Paramètre</th>
+                                    <th>Fichier 1</th>
+                                    <th>Fichier 2</th>
+                                    <th>Différence</th>
+                                    <th>Différence %</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
 
-  <script src="scripts/main.js"></script>
-  <script src="scripts/boxplot.js"></script>
-  <script src="scripts/visualization.js"></script>
- </body>
- </html>
+    <!-- Modales et conteneurs pour les fonctionnalités avancées -->
+    <div id="details-modal" class="modal hidden">
+        <div class="modal-content">
+            <span id="modal-close" class="modal-close">&times;</span>
+            <h3 id="modal-title">Détails de la méthode</h3>
+            <div id="distribution-zone" class="result-box"></div>
+            <div id="curve-image-container"></div>
+            <div id="ssd-value" class="ssd-value"></div>
+            <div id="method-details-container" class="method-details-container"></div>
+        </div>
+    </div>
+
+    <div id="batch-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="modal-close" id="batch-modal-close">&times;</span>
+            <h3>Mode batch - Traitement multiple</h3>
+            <div class="batch-files-list">
+                <h4>Fichiers sélectionnés</h4>
+                <ul id="batch-files-list"></ul>
+            </div>
+            <div class="batch-progress">
+                <h4>Progression</h4>
+                <div class="progress-bar-container">
+                    <div id="batch-progress-bar" class="progress-bar"></div>
+                </div>
+                <div id="batch-progress-text" class="progress-text">0%</div>
+            </div>
+            <div class="batch-controls">
+                <button id="start-batch-btn" class="action-button">
+                    <i class="fas fa-play"></i> Démarrer le traitement
+                </button>
+                <button id="cancel-batch-btn" class="action-button">
+                    <i class="fas fa-times"></i> Annuler
+                </button>
+            </div>
+            <div id="batch-results-summary" class="batch-results-summary hidden">
+                <h4>Résumé des résultats</h4>
+                <div class="batch-summary-stats"></div>
+                <div class="batch-summary-chart-container">
+                    <canvas id="batch-summary-chart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="color-customization-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="modal-close" id="color-modal-close">&times;</span>
+            <h3>Personnalisation des couleurs</h3>
+            <div class="color-settings">
+                <div class="color-setting-group">
+                    <h4>Couleurs des méthodes</h4>
+                    <div class="color-picker-container">
+                        <label for="rand-color">Classique :</label>
+                        <input type="color" id="rand-color" class="color-picker" data-method="rand">
+                    </div>
+                    <div class="color-picker-container">
+                        <label for="mlp-color">MLP :</label>
+                        <input type="color" id="mlp-color" class="color-picker" data-method="mlp">
+                    </div>
+                    <div class="color-picker-container">
+                        <label for="cnn-color">CNN :</label>
+                        <input type="color" id="cnn-color" class="color-picker" data-method="cnn">
+                    </div>
+                    <div class="color-picker-container">
+                        <label for="gen-color">Génétique :</label>
+                        <input type="color" id="gen-color" class="color-picker" data-method="gen">
+                    </div>
+                </div>
+                <div class="color-setting-group">
+                    <h4>Couleurs de l'interface</h4>
+                    <div class="color-picker-container">
+                        <label for="primary-color">Couleur primaire :</label>
+                        <input type="color" id="primary-color" class="color-picker" data-var="--primary-color">
+                    </div>
+                    <div class="color-picker-container">
+                        <label for="accent-color">Couleur d'accent :</label>
+                        <input type="color" id="accent-color" class="color-picker" data-var="--accent-color">
+                    </div>
+                    <div class="color-picker-container">
+                        <label for="background-color">Arrière-plan :</label>
+                        <input type="color" id="background-color" class="color-picker" data-var="--background-color">
+                    </div>
+                </div>
+            </div>
+            <div class="color-preset-container">
+                <h4>Préréglages</h4>
+                <div class="color-presets">
+                    <button class="color-preset-btn" data-preset="default">Par défaut</button>
+                    <button class="color-preset-btn" data-preset="polyfit">Polyfit</button>
+                    <button class="color-preset-btn" data-preset="contrast">Contraste élevé</button>
+                    <button class="color-preset-btn" data-preset="pastel">Pastel</button>
+                </div>
+            </div>
+            <div class="color-controls">
+                <button id="save-colors-btn" class="action-button">
+                    <i class="fas fa-save"></i> Enregistrer
+                </button>
+                <button id="reset-colors-btn" class="action-button">
+                    <i class="fas fa-undo"></i> Réinitialiser
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Conteneur pour les notifications toast -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="main.js"></script>
+    <script src="boxplot.js"></script>
+    <script src="visualization.js"></script>
+    <script src="table_sorting.js"></script>
+    <script src="export.js"></script>
+    <script src="iv_chart.js"></script>
+    <script src="batch_mode.js"></script>
+    <script src="notifications.js"></script>
+    <script src="sharing.js"></script>
+    <script src="presentation_mode.js"></script>
+    <script src="integration.js"></script>
+</body>
+</html>
