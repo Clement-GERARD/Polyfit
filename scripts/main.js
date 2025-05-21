@@ -490,7 +490,8 @@ function displayResults(data) {
         resultDetails["mlp"] = {
             params: data.params_mlp,
             image: data.curve_image_mlp || null,
-            ssd: data.ssd_mlp || null
+            ssd: data.ssd_mlp || null,
+            error: data.error_bounds_mlp
         };
     }
 
@@ -507,7 +508,8 @@ function displayResults(data) {
         resultDetails["cnn"] = {
             params: data.params_cnn,
             image: data.curve_image_cnn || null,
-            ssd: data.ssd_cnn || null
+            ssd: data.ssd_cnn || null,
+            error: data.error_bounds_cnn
         };
     }
 
@@ -524,7 +526,8 @@ function displayResults(data) {
         resultDetails["gen"] = {
             params: data.params_genetique,
             image: data.curve_image_gen || null,
-            ssd: data.ssd_gen || null
+            ssd: data.ssd_gen || null,
+            error: data.error_bounds_genetique
         };
     }
 
@@ -541,7 +544,8 @@ function displayResults(data) {
         resultDetails["rand"] = {
             params: data.params_random,
             image: data.curve_image_rand || null,
-            ssd: data.ssd_rand || null
+            ssd: data.ssd_rand || null,
+            error: data.error_bounds_random
         };
     }
 
@@ -668,6 +672,13 @@ function openDetailsModal(method) {
         paramsHTML += '</table>';
         
         distributionZone.innerHTML = paramsHTML;
+
+        if (details.error) {
+                plotErrorBars(method, details.error);
+            } else {
+                document.getElementById('error-bar-chart').remove(); // ou vide le canvas si pas de data
+            }
+                
         // Afficher l'image si disponible
         if (details.image) {
             curveImageContainer.innerHTML = `<img src="data:image/png;base64,${details.image}" alt="Courbe ${method}" style="width:100%; margin-top:15px; border-radius:8px;">`;
@@ -683,6 +694,60 @@ function openDetailsModal(method) {
     }
 
     modal.classList.remove("hidden");
+}
+
+function plotErrorBars(method, statsData) {
+    const ctx = document.getElementById('error-bar-chart').getContext('2d');
+    if (!statsData || !statsData.means) return;
+
+    const labels = ['J0', 'Jph', 'Rs', 'Rsh', 'n'];
+    const means = statsData.means;
+    const mins = statsData.mins;
+    const maxs = statsData.maxs;
+
+    const errorBarData = {
+        labels: labels,
+        datasets: [{
+            label: `${methodToName(method)} – Moyenne et écart`,
+            data: labels.map(param => ({
+                x: means[param],
+                xMin: mins[param],
+                xMax: maxs[param]
+            })),
+            parsing: {
+                xAxisKey: 'x',
+                xMinKey: 'xMin',
+                xMaxKey: 'xMax'
+            },
+            backgroundColor: 'rgba(54, 162, 235, 0.5)',
+            borderColor: 'rgb(54, 162, 235)',
+            borderWidth: 1,
+            errorBarColor: 'rgb(54, 162, 235)',
+            type: 'barWithErrorBars'
+        }]
+    };
+
+    const config = {
+        type: 'barWithErrorBars',
+        data: errorBarData,
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            plugins: {
+                legend: { display: false },
+                tooltip: { enabled: true }
+            },
+            scales: {
+                x: { title: { display: true, text: 'Valeur' } },
+                y: { title: { display: true, text: 'Paramètre' } }
+            }
+        }
+    };
+
+    if (window.errorBarChart) {
+        window.errorBarChart.destroy();
+    }
+    window.errorBarChart = new Chart(ctx, config);
 }
 
 // Permettre le traitement batch des fichiers
