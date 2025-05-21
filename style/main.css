@@ -170,6 +170,9 @@ body {
   min-width: 300px;
  }
 
+.right-panel .result-card {
+    width: 44%;
+}
  .result-card {
   min-width: 44%;
   background: var(--bg-color);
