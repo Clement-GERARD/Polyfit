@@ -8,16 +8,11 @@ document.addEventListener('DOMContentLoaded', function() {
 function setupExportButtons() {
     const exportCsvBtn = document.getElementById('export-csv-btn');
     const generatePdfBtn = document.getElementById('generate-pdf-btn');
-    const exportExcelBtn = document.createElement('button');
-    
-    // Configurer le bouton d'export Excel
-    exportExcelBtn.id = 'export-excel-btn';
-    exportExcelBtn.textContent = 'Exporter en Excel';
-    exportExcelBtn.addEventListener('click', exportToExcel);
+    const exportExcelBtn = document.getElementById('export-excel-btn');
     
     // Ajouter le bouton Excel après le bouton CSV
-    if (exportCsvBtn && exportCsvBtn.parentNode) {
-        exportCsvBtn.parentNode.insertBefore(exportExcelBtn, exportCsvBtn.nextSibling);
+    if (exportExcelBtn) {
+        exportExcelBtn.addEventListener('click', exportToExcel);
     }
     
     // Configurer les gestionnaires d'événements pour les autres boutons
