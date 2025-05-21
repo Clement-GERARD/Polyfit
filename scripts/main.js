@@ -585,12 +585,14 @@ function openDetailsModal(method) {
         ssdValue.innerHTML = "";
     } else {
         title.textContent = `Détails – ${methodToName(method)}`;
-        body.innerHTML = `
+        distributionZone.innerHTML = `
             <p><strong>J0 :</strong> ${details.params.J0}</p>
             <p><strong>Jph :</strong> ${details.params.Jph}</p>
             <p><strong>Rs :</strong> ${details.params.Rs}</p>
             <p><strong>Rsh :</strong> ${details.params.Rsh}</p>
             <p><strong>n :</strong> ${details.params.n}</p>
+        `;
+        ssdValue.innerHTML = `
             ${details.ssd ? `<p><strong>SSD :</strong> ${formatNumber(details.ssd)}</p>` : ''}
         `;
     }
