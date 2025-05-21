@@ -145,7 +145,8 @@ async function uploadFile(file) {
             
             // Mettre à jour le tableau
             updateComparisonTable(data);
-            
+
+            console.log(allResults, allResults.length);
             // Créer les boîtes à moustaches
             createBoxplots();
             
