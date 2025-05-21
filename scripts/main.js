@@ -1,4 +1,4 @@
-uedocument.getElementById('file-input').addEventListener('change', handleFiles);
+document.getElementById('file-input').addEventListener('change', handleFiles);
 document.getElementById('display-mode').addEventListener('change', toggleDisplayMode);
 document.getElementById('toggle-theme-btn').addEventListener('click', toggleTheme);
 
