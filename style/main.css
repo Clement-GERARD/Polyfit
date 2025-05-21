@@ -151,18 +151,27 @@ body {
 
  .main-container {
   display: flex;
-  justify-content: space-between;
-  max-width: 1200px;
-  margin: 1.5rem auto;
-  gap: 1.5rem;
+  margin: 2%;
+  gap: 2%;
  }
 
+.left-panel {
+  width: 100%
+  }
+
+.right-panel {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  flex-direction: row;
+}
+
  .left-panel, .right-panel {
-  width: 48%;
   min-width: 300px;
  }
 
  .result-card {
+  min-width: 44%;
   background: var(--bg-color);
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
