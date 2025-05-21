@@ -1,4 +1,4 @@
-document.getElementById('file-input').addEventListener('change', handleFiles);
+uedocument.getElementById('file-input').addEventListener('change', handleFiles);
 document.getElementById('display-mode').addEventListener('change', toggleDisplayMode);
 document.getElementById('toggle-theme-btn').addEventListener('click', toggleTheme);
 
@@ -276,7 +276,7 @@ function displayResults(data) {
             ${data.ssd_gen ? '<br><strong>SSD: ' + formatNumber(data.ssd_gen) + '</strong>' : ''}
         `);
         resultDetails["gen"] = {
-            params: data.params_gen,
+            params: data.params_genetique,
             ssd: data.ssd_gen || null
         };
     }
@@ -292,7 +292,7 @@ function displayResults(data) {
             ${data.ssd_rand ? '<br><strong>SSD: ' + formatNumber(data.ssd_rand) + '</strong>' : ''}
         `);
         resultDetails["rand"] = {
-            params: data.params_rand,
+            params: data.params_random,
             ssd: data.ssd_rand || null
         };
     }
