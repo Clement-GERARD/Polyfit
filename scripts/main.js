@@ -310,7 +310,6 @@ function handleFiles(event) {
     updatePlaceholder("#mlp-method", "Analyse par MLP en cours...");
     updatePlaceholder("#cnn-method", "Analyse par CNN en cours...");
     updatePlaceholder("#genetic-method", "Analyse par Fit Génétique en cours...");
-    updatePlaceholder("#boxplot-zone", "Calcul des distributions en cours...");
 
     // Réinitialiser le tableau
     resetComparisonTable();
