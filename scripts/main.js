@@ -328,6 +328,8 @@ async function uploadFile(file) {
             updateComparisonTable(data);
 
             // Créer les boîtes à moustaches
+            console.log(allResults);
+            console.log("Appel de createBoxplots");
             createBoxplots();
             
         } else {
