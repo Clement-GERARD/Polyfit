@@ -149,13 +149,6 @@ async function uploadFile(file) {
             // Créer les boîtes à moustaches
             createBoxplots();
             
-            // Calculer et afficher les SSD
-            if (data.ssd) {
-                displaySSD(data.ssd);
-            } else {
-                calculateAndDisplaySSD(data);
-            }
-            
         } else {
             alert("Erreur lors du téléchargement du fichier.");
             updateProcessingStatus("waiting");
