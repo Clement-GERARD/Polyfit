@@ -273,66 +273,6 @@
         </div>
     </div>
 
-    <div id="color-customization-modal" class="modal hidden">
-        <div class="modal-content">
-            <span class="modal-close" id="color-modal-close">&times;</span>
-            <h3>Personnalisation des couleurs</h3>
-            <div class="color-settings">
-                <div class="color-setting-group">
-                    <h4>Couleurs des méthodes</h4>
-                    <div class="color-picker-container">
-                        <label for="rand-color">Classique :</label>
-                        <input type="color" id="rand-color" class="color-picker" data-method="rand">
-                    </div>
-                    <div class="color-picker-container">
-                        <label for="mlp-color">MLP :</label>
-                        <input type="color" id="mlp-color" class="color-picker" data-method="mlp">
-                    </div>
-                    <div class="color-picker-container">
-                        <label for="cnn-color">CNN :</label>
-                        <input type="color" id="cnn-color" class="color-picker" data-method="cnn">
-                    </div>
-                    <div class="color-picker-container">
-                        <label for="gen-color">Génétique :</label>
-                        <input type="color" id="gen-color" class="color-picker" data-method="gen">
-                    </div>
-                </div>
-                <div class="color-setting-group">
-                    <h4>Couleurs de l'interface</h4>
-                    <div class="color-picker-container">
-                        <label for="primary-color">Couleur primaire :</label>
-                        <input type="color" id="primary-color" class="color-picker" data-var="--primary-color">
-                    </div>
-                    <div class="color-picker-container">
-                        <label for="accent-color">Couleur d'accent :</label>
-                        <input type="color" id="accent-color" class="color-picker" data-var="--accent-color">
-                    </div>
-                    <div class="color-picker-container">
-                        <label for="background-color">Arrière-plan :</label>
-                        <input type="color" id="background-color" class="color-picker" data-var="--background-color">
-                    </div>
-                </div>
-            </div>
-            <div class="color-preset-container">
-                <h4>Préréglages</h4>
-                <div class="color-presets">
-                    <button class="color-preset-btn" data-preset="default">Par défaut</button>
-                    <button class="color-preset-btn" data-preset="polyfit">Polyfit</button>
-                    <button class="color-preset-btn" data-preset="contrast">Contraste élevé</button>
-                    <button class="color-preset-btn" data-preset="pastel">Pastel</button>
-                </div>
-            </div>
-            <div class="color-controls">
-                <button id="save-colors-btn" class="action-button">
-                    <i class="fas fa-save"></i> Enregistrer
-                </button>
-                <button id="reset-colors-btn" class="action-button">
-                    <i class="fas fa-undo"></i> Réinitialiser
-                </button>
-            </div>
-        </div>
-    </div>
-
     <!-- Conteneur pour les notifications toast -->
     <div id="toast-container" class="toast-container"></div>
 
