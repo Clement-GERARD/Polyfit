@@ -8,186 +8,201 @@ let currentFileName = "";  // Nom du fichier en cours de traitement
 let charts = {};           // Stockage des instances de graphiques
 
 // Fonction pour les Moustaches
-function createBoxplots() {
-    // Si il n'y a qu'un seul résultat, on ne peut pas créer de boîtes à moustaches
-    console.log(allResults, allResults.length);
-    if (allResults.length <= 1) {
-        updatePlaceholder("#boxplot-zone", "Pas assez de données pour créer des boîtes à moustaches. Veuillez analyser plusieurs fichiers.");
-        console.log("Arrêt de BoxPlots");
-        return;
-    }
+function createAllBoxplots() {
+            console.log("allResults:", allResults, "Length:", allResults.length);
 
-    // Collecter toutes les données par paramètre
-    const boxplotData = {
-        J0: { rand: [], mlp: [], cnn: [], gen: [] },
-        Jph: { rand: [], mlp: [], cnn: [], gen: [] },
-        Rs: { rand: [], mlp: [], cnn: [], gen: [] },
-        Rsh: { rand: [], mlp: [], cnn: [], gen: [] },
-        n: { rand: [], mlp: [], cnn: [], gen: [] }
-    };
+            // Vérifier si des résultats sont disponibles
+            if (allResults.length === 0) {
+                updatePlaceholder("#boxplot-zone", "Pas de données disponibles pour créer des boîtes à moustaches. Veuillez analyser au moins un fichier.");
+                console.log("Arrêt de BoxPlots: Pas de données.");
+                return;
+            }
 
-    // Remplir les données
-    allResults.forEach(result => {
-        for (const [methodKey, methodParams] of Object.entries(result.methods)) {
-            for (const [paramKey, paramValue] of Object.entries(methodParams)) {
-                if (boxplotData[paramKey] && boxplotData[paramKey][methodKey]) {
-                    boxplotData[paramKey][methodKey].push(parseFloat(paramValue));
+            // Utiliser toujours les résultats du premier fichier
+            const singleFileResult = allResults[0]; 
+            if (!singleFileResult || !singleFileResult.methods) {
+                updatePlaceholder("#boxplot-zone", "Structure de données invalide dans allResults[0].");
+                console.log("Arrêt de BoxPlots: Structure de données invalide.");
+                return;
+            }
+
+            // Masquer le placeholder principal une fois que les graphiques sont prêts à être dessinés
+            updatePlaceholder("#boxplot-zone", "", 'none');
+
+            const parameters = ['J0', 'Jph', 'Rs', 'Rsh', 'n'];
+
+            parameters.forEach(paramKey => {
+                const canvasId = `${paramKey}-boxplot-canvas`; // ID du canvas à l'intérieur de la div
+                const boxplotElement = document.getElementById(canvasId);
+
+                if (!boxplotElement || !boxplotElement.getContext) {
+                    console.error(`Élément canvas '${canvasId}' non trouvé ou non supporté.`);
+                    return; // Passer au paramètre suivant si le canvas n'existe pas
                 }
-            }
-        }
-    });
 
-    // Masquer le placeholder
-    document.querySelector("#boxplot-zone .content-placeholder").style.display = "none";
+                // Détruire le graphique existant s'il y en a un
+                if (charts[paramKey]) {
+                    charts[paramKey].destroy();
+                }
 
-    // Couleurs pour les différentes méthodes
-    const methodColors = {
-        rand: 'rgba(54, 162, 235, 0.8)',
-        mlp: 'rgba(255, 99, 132, 0.8)',
-        cnn: 'rgba(75, 192, 192, 0.8)',
-        gen: 'rgba(255, 159, 64, 0.8)'
-    };
-    
-    // Créer les boîtes à moustaches avec Chart.js
-    for (const [paramKey, methodsData] of Object.entries(boxplotData)) {
-        const boxplotElement = document.getElementById(`${paramKey}-boxplot`);
-        
-        if (boxplotElement && boxplotElement.getContext) {
-            // Nettoyer tout graphique existant
-            if (charts[paramKey]) {
-                charts[paramKey].destroy();
-            }
-            
-            // Préparer les données pour Chart.js
-            const datasets = [];
-            const labels = [];
-            
-            for (const [methodKey, values] of Object.entries(methodsData)) {
-                if (values.length > 0) {
-                    // Trier les valeurs pour les calculs statistiques
-                    values.sort((a, b) => a - b);
-                    
-                    // Calculer les métriques pour boîte à moustaches
-                    const min = values[0];
-                    const max = values[values.length - 1];
-                    const q1 = values[Math.floor(values.length * 0.25)];
-                    const median = values[Math.floor(values.length * 0.5)];
-                    const q3 = values[Math.floor(values.length * 0.75)];
-                    
+                const valuesForParam = [];
+                const scatterPoints = [];
+
+                // Collecter les données pour le paramètre actuel à partir des 4 méthodes du fichier unique
+                for (const [methodKey, methodParams] of Object.entries(singleFileResult.methods)) {
+                    let value;
+                    // Gérer le mappage 'nVth' vers 'n'
+                    if (paramKey === 'n' && methodParams['nVth'] !== undefined) {
+                        value = parseFloat(methodParams['nVth']);
+                    } else if (methodParams[paramKey] !== undefined) {
+                        value = parseFloat(methodParams[paramKey]);
+                    } else {
+                        continue; // Ignorer si le paramètre n'est pas trouvé pour cette méthode
+                    }
+                    valuesForParam.push(value);
+
+                    // Pour les points de dispersion : la coordonnée x sera légèrement décalée autour de 0
+                    const jitter = (Math.random() - 0.5) * 0.4; // Ajuster 0.4 pour plus/moins d'étalement
+                    scatterPoints.push({ x: 0 + jitter, y: value, method: methodToName(methodKey) });
+                }
+
+                // Préparer les ensembles de données pour Chart.js
+                const datasets = [];
+                const labels = ['']; // Étiquette unique pour la boîte à moustaches unique
+
+                // Ajouter l'ensemble de données de la boîte à moustaches
+                if (valuesForParam.length > 0) {
                     datasets.push({
-                        label: methodToName(methodKey),
-                        backgroundColor: methodColors[methodKey],
-                        borderColor: methodColors[methodKey].replace('0.8', '1'),
+                        type: 'boxplot', // Définir explicitement le type pour cet ensemble de données
+                        label: `Distribution des prédictions`,
+                        backgroundColor: 'rgba(75, 192, 192, 0.6)', // Couleur pour la boîte à moustaches
+                        borderColor: 'rgba(75, 192, 192, 1)',
                         borderWidth: 1,
-                        outlierColor: '#999999',
-                        data: [
-                            {
-                                min: min,
-                                q1: q1,
-                                median: median,
-                                q3: q3,
-                                max: max,
-                                outliers: []
-                            }
-                        ]
+                        data: [valuesForParam] // Données pour la boîte à moustaches
                     });
-                    
-                    labels.push(methodToName(methodKey));
+                } else {
+                    // Afficher un message dans la div spécifique si pas assez de données
+                    const parentDiv = document.getElementById(`${paramKey}-boxplot`);
+                    if (parentDiv) {
+                        parentDiv.innerHTML = `<div class="content-placeholder">Pas assez de données pour ${paramKey}.</div>`;
+                        parentDiv.querySelector('.content-placeholder').style.display = 'flex';
+                    }
+                    return; // Passer au paramètre suivant
                 }
-            }
-            
-            // Créer le graphique
-            const ctx = boxplotElement.getContext('2d');
-            
-            // Nous utiliserons un graphique à barres standard qui ressemble à une boîte à moustaches
-            charts[paramKey] = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: datasets.map((dataset, i) => ({
-                        label: dataset.label,
-                        data: [dataset.data[0].median], // Nous utilisons juste la médiane pour la hauteur de la barre
-                        backgroundColor: dataset.backgroundColor,
-                        borderColor: dataset.borderColor,
-                        borderWidth: dataset.borderWidth
-                    }))
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: `Distribution du paramètre ${paramKey}`,
-                            font: {
-                                size: 16
-                            }
-                        },
-                        legend: {
-                            display: true,
-                            position: 'top'
-                        },
+
+                // Ajouter l'ensemble de données de dispersion pour les points individuels
+                if (scatterPoints.length > 0) {
+                    datasets.push({
+                        type: 'scatter', // Définir explicitement le type pour cet ensemble de données
+                        label: 'Points de données individuels',
+                        data: scatterPoints,
+                        backgroundColor: 'rgba(255, 99, 132, 1)', // Couleur pour les points individuels
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        pointRadius: 6, // Taille des points
+                        pointHoverRadius: 8,
+                        showLine: false, // Ne pas tracer de lignes entre les points de dispersion
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
-                                    const methodIndex = context.dataIndex;
-                                    const methodKey = Object.keys(methodsData)[methodIndex];
-                                    const values = methodsData[methodKey];
-                                    if (values && values.length > 0) {
-                                        values.sort((a, b) => a - b);
-                                        const min = values[0];
-                                        const max = values[values.length - 1];
-                                        const median = values[Math.floor(values.length * 0.5)];
-                                        return [
-                                            `${methodToName(methodKey)}:`,
-                                            `Min: ${formatNumber(min)}`,
-                                            `Médiane: ${formatNumber(median)}`,
-                                            `Max: ${formatNumber(max)}`
-                                        ];
+                                    // Info-bulle personnalisée pour les points de dispersion pour afficher la méthode et la valeur
+                                    if (context.dataset.type === 'scatter') {
+                                        const point = context.raw;
+                                        return `${point.method}: ${formatNumber(point.y)}`;
                                     }
                                     return '';
                                 }
                             }
                         }
+                    });
+                }
+
+                const ctx = boxplotElement.getContext('2d');
+
+                // Créer l'instance du graphique
+                charts[paramKey] = new Chart(ctx, {
+                    data: {
+                        labels: labels,
+                        datasets: datasets
                     },
-                    scales: {
-                        y: {
-                            beginAtZero: paramKey !== 'Rsh', // Rsh peut avoir de grandes valeurs
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
                             title: {
                                 display: true,
-                                text: `Valeur de ${paramKey}`,
+                                text: `Distribution de ${paramKey === 'n' ? 'n / nVth' : paramKey}`,
                                 font: {
-                                    size: 14
+                                    size: 18,
+                                    weight: 'bold'
+                                },
+                                color: '#333'
+                            },
+                            legend: {
+                                display: false, // Masquer la légende car l'objectif principal est la boîte à moustaches + les points
+                            },
+                            tooltip: {
+                                // Rappels d'info-bulle unifiés pour la boîte à moustaches et la dispersion
+                                callbacks: {
+                                    title: function(context) {
+                                        if (context[0] && context[0].dataset.type === 'boxplot') {
+                                            return `Paramètre : ${paramKey === 'n' ? 'n / nVth' : paramKey}`;
+                                        } else if (context[0] && context[0].dataset.type === 'scatter') {
+                                            return `Point de donnée`;
+                                        }
+                                        return '';
+                                    },
+                                    label: function(context) {
+                                        if (context.dataset.type === 'boxplot') {
+                                            // Calculer les statistiques directement à partir du tableau de valeurs brutes pour la boîte à moustaches
+                                            const rawValues = context.dataset.data[context.dataIndex];
+                                            const stats = calculateBoxplotStats(rawValues);
+                                            
+                                            return [
+                                                `Min: ${formatNumber(stats.min)}`,
+                                                `Q1: ${formatNumber(stats.q1)}`,
+                                                `Médiane: ${formatNumber(stats.median)}`,
+                                                `Q3: ${formatNumber(stats.q3)}`,
+                                                `Max: ${formatNumber(stats.max)}`
+                                            ];
+                                        } else if (context.dataset.type === 'scatter') {
+                                            const point = context.raw;
+                                            return `${point.method}: ${formatNumber(point.y)}`;
+                                        }
+                                        return '';
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: false,
+                                title: {
+                                    display: true,
+                                    text: `Valeur de ${paramKey === 'n' ? 'n / nVth' : paramKey}`,
+                                    font: {
+                                        size: 14
+                                    },
+                                    color: '#555'
+                                },
+                                ticks: {
+                                    callback: function(value) {
+                                        return formatNumber(value);
+                                    },
+                                    color: '#666'
+                                }
+                            },
+                            x: {
+                                // Masquer les étiquettes et les tics de l'axe X pour une seule boîte à moustaches
+                                display: false,
+                                ticks: {
+                                    display: false
                                 }
                             }
                         }
                     }
-                }
-            });
-            
-            // Ajouter des points individuels pour chaque méthode
-            datasets.forEach((dataset, datasetIndex) => {
-                const methodKey = Object.keys(methodsData)[datasetIndex];
-                const values = methodsData[methodKey];
-                
-                if (values && values.length > 0) {
-                    // Afficher des statistiques en dessous du graphique
-                    const statsDiv = document.createElement('div');
-                    statsDiv.className = 'boxplot-stats';
-                    statsDiv.innerHTML = `
-                        <div class="method-stats" style="color: ${dataset.borderColor}">
-                            <strong>${dataset.label}:</strong>
-                            Min: ${formatNumber(dataset.data[0].min)}, 
-                            Médiane: ${formatNumber(dataset.data[0].median)}, 
-                            Max: ${formatNumber(dataset.data[0].max)}
-                        </div>
-                    `;
-                    boxplotElement.parentNode.appendChild(statsDiv);
-                }
+                });
             });
         }
-    }
-}
-
 // Fonction pour jouer avec le thème de la page
 function toggleTheme() {
     isDarkTheme = !isDarkTheme;
@@ -328,9 +343,7 @@ async function uploadFile(file) {
             updateComparisonTable(data);
 
             // Créer les boîtes à moustaches
-            console.log(allResults);
-            console.log("Appel de createBoxplots");
-            createBoxplots();
+            createAllBoxplots();
             
         } else {
             alert("Erreur lors du téléchargement du fichier.");
