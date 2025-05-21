@@ -7,6 +7,186 @@ const allResults = [];     // Stockage de tous les résultats pour les boîtes �
 let currentFileName = "";  // Nom du fichier en cours de traitement
 let charts = {};           // Stockage des instances de graphiques
 
+// Fonction pour les Moustaches
+function createBoxplots() {
+    // Si il n'y a qu'un seul résultat, on ne peut pas créer de boîtes à moustaches
+    console.log(allResults, allResults.length);
+    if (allResults.length <= 1) {
+        updatePlaceholder("#boxplot-zone", "Pas assez de données pour créer des boîtes à moustaches. Veuillez analyser plusieurs fichiers.");
+        return;
+    }
+
+    // Collecter toutes les données par paramètre
+    const boxplotData = {
+        J0: { rand: [], mlp: [], cnn: [], gen: [] },
+        Jph: { rand: [], mlp: [], cnn: [], gen: [] },
+        Rs: { rand: [], mlp: [], cnn: [], gen: [] },
+        Rsh: { rand: [], mlp: [], cnn: [], gen: [] },
+        n: { rand: [], mlp: [], cnn: [], gen: [] }
+    };
+
+    // Remplir les données
+    allResults.forEach(result => {
+        for (const [methodKey, methodParams] of Object.entries(result.methods)) {
+            for (const [paramKey, paramValue] of Object.entries(methodParams)) {
+                if (boxplotData[paramKey] && boxplotData[paramKey][methodKey]) {
+                    boxplotData[paramKey][methodKey].push(parseFloat(paramValue));
+                }
+            }
+        }
+    });
+
+    // Masquer le placeholder
+    document.querySelector("#boxplot-zone .content-placeholder").style.display = "none";
+
+    // Couleurs pour les différentes méthodes
+    const methodColors = {
+        rand: 'rgba(54, 162, 235, 0.8)',
+        mlp: 'rgba(255, 99, 132, 0.8)',
+        cnn: 'rgba(75, 192, 192, 0.8)',
+        gen: 'rgba(255, 159, 64, 0.8)'
+    };
+    
+    // Créer les boîtes à moustaches avec Chart.js
+    for (const [paramKey, methodsData] of Object.entries(boxplotData)) {
+        const boxplotElement = document.getElementById(`${paramKey}-boxplot`);
+        
+        if (boxplotElement && boxplotElement.getContext) {
+            // Nettoyer tout graphique existant
+            if (charts[paramKey]) {
+                charts[paramKey].destroy();
+            }
+            
+            // Préparer les données pour Chart.js
+            const datasets = [];
+            const labels = [];
+            
+            for (const [methodKey, values] of Object.entries(methodsData)) {
+                if (values.length > 0) {
+                    // Trier les valeurs pour les calculs statistiques
+                    values.sort((a, b) => a - b);
+                    
+                    // Calculer les métriques pour boîte à moustaches
+                    const min = values[0];
+                    const max = values[values.length - 1];
+                    const q1 = values[Math.floor(values.length * 0.25)];
+                    const median = values[Math.floor(values.length * 0.5)];
+                    const q3 = values[Math.floor(values.length * 0.75)];
+                    
+                    datasets.push({
+                        label: methodToName(methodKey),
+                        backgroundColor: methodColors[methodKey],
+                        borderColor: methodColors[methodKey].replace('0.8', '1'),
+                        borderWidth: 1,
+                        outlierColor: '#999999',
+                        data: [
+                            {
+                                min: min,
+                                q1: q1,
+                                median: median,
+                                q3: q3,
+                                max: max,
+                                outliers: []
+                            }
+                        ]
+                    });
+                    
+                    labels.push(methodToName(methodKey));
+                }
+            }
+            
+            // Créer le graphique
+            const ctx = boxplotElement.getContext('2d');
+            
+            // Nous utiliserons un graphique à barres standard qui ressemble à une boîte à moustaches
+            charts[paramKey] = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: datasets.map((dataset, i) => ({
+                        label: dataset.label,
+                        data: [dataset.data[0].median], // Nous utilisons juste la médiane pour la hauteur de la barre
+                        backgroundColor: dataset.backgroundColor,
+                        borderColor: dataset.borderColor,
+                        borderWidth: dataset.borderWidth
+                    }))
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: `Distribution du paramètre ${paramKey}`,
+                            font: {
+                                size: 16
+                            }
+                        },
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const methodIndex = context.dataIndex;
+                                    const methodKey = Object.keys(methodsData)[methodIndex];
+                                    const values = methodsData[methodKey];
+                                    if (values && values.length > 0) {
+                                        values.sort((a, b) => a - b);
+                                        const min = values[0];
+                                        const max = values[values.length - 1];
+                                        const median = values[Math.floor(values.length * 0.5)];
+                                        return [
+                                            `${methodToName(methodKey)}:`,
+                                            `Min: ${formatNumber(min)}`,
+                                            `Médiane: ${formatNumber(median)}`,
+                                            `Max: ${formatNumber(max)}`
+                                        ];
+                                    }
+                                    return '';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: paramKey !== 'Rsh', // Rsh peut avoir de grandes valeurs
+                            title: {
+                                display: true,
+                                text: `Valeur de ${paramKey}`,
+                                font: {
+                                    size: 14
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Ajouter des points individuels pour chaque méthode
+            datasets.forEach((dataset, datasetIndex) => {
+                const methodKey = Object.keys(methodsData)[datasetIndex];
+                const values = methodsData[methodKey];
+                
+                if (values && values.length > 0) {
+                    // Afficher des statistiques en dessous du graphique
+                    const statsDiv = document.createElement('div');
+                    statsDiv.className = 'boxplot-stats';
+                    statsDiv.innerHTML = `
+                        <div class="method-stats" style="color: ${dataset.borderColor}">
+                            <strong>${dataset.label}:</strong>
+                            Min: ${formatNumber(dataset.data[0].min)}, 
+                            Médiane: ${formatNumber(dataset.data[0].median)}, 
+                            Max: ${formatNumber(dataset.data[0].max)}
+                        </div>
+                    `;
+                    boxplotElement.parentNode.appendChild(statsDiv);
+                }
+            });
+        }
+    }
+}
+
 // Fonction pour jouer avec le thème de la page
 function toggleTheme() {
     isDarkTheme = !isDarkTheme;
@@ -377,185 +557,6 @@ function displaySSD(ssdValues) {
     
     ssdContainer.innerHTML = ssdHTML;
     ssdContainer.classList.remove('hidden');
-}
-
-function createBoxplots() {
-    // Si il n'y a qu'un seul résultat, on ne peut pas créer de boîtes à moustaches
-    console.log(allResults, allResults.length);
-    if (allResults.length <= 1) {
-        updatePlaceholder("#boxplot-zone", "Pas assez de données pour créer des boîtes à moustaches. Veuillez analyser plusieurs fichiers.");
-        return;
-    }
-
-    // Collecter toutes les données par paramètre
-    const boxplotData = {
-        J0: { rand: [], mlp: [], cnn: [], gen: [] },
-        Jph: { rand: [], mlp: [], cnn: [], gen: [] },
-        Rs: { rand: [], mlp: [], cnn: [], gen: [] },
-        Rsh: { rand: [], mlp: [], cnn: [], gen: [] },
-        n: { rand: [], mlp: [], cnn: [], gen: [] }
-    };
-
-    // Remplir les données
-    allResults.forEach(result => {
-        for (const [methodKey, methodParams] of Object.entries(result.methods)) {
-            for (const [paramKey, paramValue] of Object.entries(methodParams)) {
-                if (boxplotData[paramKey] && boxplotData[paramKey][methodKey]) {
-                    boxplotData[paramKey][methodKey].push(parseFloat(paramValue));
-                }
-            }
-        }
-    });
-
-    // Masquer le placeholder
-    document.querySelector("#boxplot-zone .content-placeholder").style.display = "none";
-
-    // Couleurs pour les différentes méthodes
-    const methodColors = {
-        rand: 'rgba(54, 162, 235, 0.8)',
-        mlp: 'rgba(255, 99, 132, 0.8)',
-        cnn: 'rgba(75, 192, 192, 0.8)',
-        gen: 'rgba(255, 159, 64, 0.8)'
-    };
-    
-    // Créer les boîtes à moustaches avec Chart.js
-    for (const [paramKey, methodsData] of Object.entries(boxplotData)) {
-        const boxplotElement = document.getElementById(`${paramKey}-boxplot`);
-        
-        if (boxplotElement && boxplotElement.getContext) {
-            // Nettoyer tout graphique existant
-            if (charts[paramKey]) {
-                charts[paramKey].destroy();
-            }
-            
-            // Préparer les données pour Chart.js
-            const datasets = [];
-            const labels = [];
-            
-            for (const [methodKey, values] of Object.entries(methodsData)) {
-                if (values.length > 0) {
-                    // Trier les valeurs pour les calculs statistiques
-                    values.sort((a, b) => a - b);
-                    
-                    // Calculer les métriques pour boîte à moustaches
-                    const min = values[0];
-                    const max = values[values.length - 1];
-                    const q1 = values[Math.floor(values.length * 0.25)];
-                    const median = values[Math.floor(values.length * 0.5)];
-                    const q3 = values[Math.floor(values.length * 0.75)];
-                    
-                    datasets.push({
-                        label: methodToName(methodKey),
-                        backgroundColor: methodColors[methodKey],
-                        borderColor: methodColors[methodKey].replace('0.8', '1'),
-                        borderWidth: 1,
-                        outlierColor: '#999999',
-                        data: [
-                            {
-                                min: min,
-                                q1: q1,
-                                median: median,
-                                q3: q3,
-                                max: max,
-                                outliers: []
-                            }
-                        ]
-                    });
-                    
-                    labels.push(methodToName(methodKey));
-                }
-            }
-            
-            // Créer le graphique
-            const ctx = boxplotElement.getContext('2d');
-            
-            // Nous utiliserons un graphique à barres standard qui ressemble à une boîte à moustaches
-            charts[paramKey] = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: datasets.map((dataset, i) => ({
-                        label: dataset.label,
-                        data: [dataset.data[0].median], // Nous utilisons juste la médiane pour la hauteur de la barre
-                        backgroundColor: dataset.backgroundColor,
-                        borderColor: dataset.borderColor,
-                        borderWidth: dataset.borderWidth
-                    }))
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: `Distribution du paramètre ${paramKey}`,
-                            font: {
-                                size: 16
-                            }
-                        },
-                        legend: {
-                            display: true,
-                            position: 'top'
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    const methodIndex = context.dataIndex;
-                                    const methodKey = Object.keys(methodsData)[methodIndex];
-                                    const values = methodsData[methodKey];
-                                    if (values && values.length > 0) {
-                                        values.sort((a, b) => a - b);
-                                        const min = values[0];
-                                        const max = values[values.length - 1];
-                                        const median = values[Math.floor(values.length * 0.5)];
-                                        return [
-                                            `${methodToName(methodKey)}:`,
-                                            `Min: ${formatNumber(min)}`,
-                                            `Médiane: ${formatNumber(median)}`,
-                                            `Max: ${formatNumber(max)}`
-                                        ];
-                                    }
-                                    return '';
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: paramKey !== 'Rsh', // Rsh peut avoir de grandes valeurs
-                            title: {
-                                display: true,
-                                text: `Valeur de ${paramKey}`,
-                                font: {
-                                    size: 14
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-            
-            // Ajouter des points individuels pour chaque méthode
-            datasets.forEach((dataset, datasetIndex) => {
-                const methodKey = Object.keys(methodsData)[datasetIndex];
-                const values = methodsData[methodKey];
-                
-                if (values && values.length > 0) {
-                    // Afficher des statistiques en dessous du graphique
-                    const statsDiv = document.createElement('div');
-                    statsDiv.className = 'boxplot-stats';
-                    statsDiv.innerHTML = `
-                        <div class="method-stats" style="color: ${dataset.borderColor}">
-                            <strong>${dataset.label}:</strong>
-                            Min: ${formatNumber(dataset.data[0].min)}, 
-                            Médiane: ${formatNumber(dataset.data[0].median)}, 
-                            Max: ${formatNumber(dataset.data[0].max)}
-                        </div>
-                    `;
-                    boxplotElement.parentNode.appendChild(statsDiv);
-                }
-            });
-        }
-    }
 }
 
 function methodToName(methodKey) {
