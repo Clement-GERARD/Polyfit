@@ -245,7 +245,6 @@ function displayResults(data) {
         `);
         resultDetails["mlp"] = {
             params: data.params_mlp,
-            image: data.curve_image_mlp || null,
             ssd: data.ssd_mlp || null
         };
     }
@@ -262,7 +261,6 @@ function displayResults(data) {
         `);
         resultDetails["cnn"] = {
             params: data.params_cnn,
-            image: data.curve_image_cnn || null,
             ssd: data.ssd_cnn || null
         };
     }
@@ -279,7 +277,6 @@ function displayResults(data) {
         `);
         resultDetails["gen"] = {
             params: data.params_gen,
-            image: data.curve_image_gen || null,
             ssd: data.ssd_gen || null
         };
     }
@@ -296,7 +293,6 @@ function displayResults(data) {
         `);
         resultDetails["rand"] = {
             params: data.params_rand,
-            image: data.curve_image_rand || null,
             ssd: data.ssd_rand || null
         };
     }
@@ -582,7 +578,7 @@ function openDetailsModal(method) {
 
     const details = resultDetails[method];
 
-    if (!details || !details.params || !details.image) {
+    if (!details || !details.params) {
         console.warn("[WARN] Données manquantes pour la méthode :", method, details);
         distributionZone.innerHTML = "<p>Aucune donnée disponible pour cette méthode.</p>";
         curveImageContainer.innerHTML = "";
@@ -596,7 +592,6 @@ function openDetailsModal(method) {
             <p><strong>Rsh :</strong> ${details.params.Rsh}</p>
             <p><strong>n :</strong> ${details.params.n}</p>
             ${details.ssd ? `<p><strong>SSD :</strong> ${formatNumber(details.ssd)}</p>` : ''}
-            <img src="data:image/png;base64,${details.image}" alt="Courbe ${method}" style="width:100%; margin-top:15px; border-radius:8px;">
         `;
     }
 
