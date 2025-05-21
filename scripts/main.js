@@ -241,7 +241,7 @@ function displayResults(data) {
             Rs: ${data.params_mlp.Rs}<br>
             Rsh: ${data.params_mlp.Rsh}<br>
             n: ${data.params_mlp.n}
-            ${data.ssd_mlp ? '<br><strong>SSD: ' + formatNumber(data.ssd_mlp) + '</strong>' : ''}
+            SSD: ${data.ssd_mlp}
         `);
         resultDetails["mlp"] = {
             params: data.params_mlp,
@@ -257,7 +257,7 @@ function displayResults(data) {
             Rs: ${data.params_cnn.Rs}<br>
             Rsh: ${data.params_cnn.Rsh}<br>
             n: ${data.params_cnn.n}
-            ${data.ssd_cnn ? '<br><strong>SSD: ' + formatNumber(data.ssd_cnn) + '</strong>' : ''}
+            SSD: ${data.ssd_mlp}
         `);
         resultDetails["cnn"] = {
             params: data.params_cnn,
@@ -273,7 +273,7 @@ function displayResults(data) {
             Rs: ${data.params_genetique.Rs}<br>
             Rsh: ${data.params_genetique.Rsh}<br>
             n: ${data.params_genetique.n}
-            ${data.ssd_gen ? '<br><strong>SSD: ' + formatNumber(data.ssd_gen) + '</strong>' : ''}
+            SSD: ${data.ssd_mlp}
         `);
         resultDetails["gen"] = {
             params: data.params_genetique,
@@ -289,7 +289,7 @@ function displayResults(data) {
             Rs: ${data.params_random.Rs}<br>
             Rsh: ${data.params_random.Rsh}<br>
             n: ${data.params_random.n}
-            ${data.ssd_rand ? '<br><strong>SSD: ' + formatNumber(data.ssd_rand) + '</strong>' : ''}
+            SSD: ${data.ssd_mlp}
         `);
         resultDetails["rand"] = {
             params: data.params_random,
