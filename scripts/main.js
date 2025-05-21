@@ -579,16 +579,30 @@ function openDetailsModal(method) {
         ssdValue.innerHTML = "";
     } else {
         title.textContent = `Détails – ${methodToName(method)}`;
-        distributionZone.innerHTML = `
-            <p><strong>J0 :</strong> ${details.params.J0}</p>
-            <p><strong>Jph :</strong> ${details.params.Jph}</p>
-            <p><strong>Rs :</strong> ${details.params.Rs}</p>
-            <p><strong>Rsh :</strong> ${details.params.Rsh}</p>
-            <p><strong>n :</strong> ${details.params.n}</p>
-        `;
-        ssdValue.innerHTML = `
-            <p><strong>SSD :</strong> ${details.ssd}</p>
-        `;
+        
+        // Afficher les paramètres
+        let paramsHTML = '<table class="params-table">';
+        paramsHTML += '<tr><th>Paramètre</th><th>Valeur</th></tr>';
+        paramsHTML += `<tr><td>J0</td><td>${details.params.J0}</td></tr>`;
+        paramsHTML += `<tr><td>Jph</td><td>${details.params.Jph}</td></tr>`;
+        paramsHTML += `<tr><td>Rs</td><td>${details.params.Rs}</td></tr>`;
+        paramsHTML += `<tr><td>Rsh</td><td>${details.params.Rsh}</td></tr>`;
+        paramsHTML += `<tr><td>n</td><td>${details.params.n}</td></tr>`;
+        paramsHTML += '</table>';
+        
+        distributionZone.innerHTML = paramsHTML;
+        // Afficher l'image si disponible
+        if (details.image) {
+            curveImageContainer.innerHTML = `<img src="data:image/png;base64,${details.image}" alt="Courbe ${method}" style="width:100%; margin-top:15px; border-radius:8px;">`;
+        } else {
+            curveImageContainer.innerHTML = "";
+        }
+        // Afficher le SSD si disponible
+        if (details.ssd !== null && details.ssd !== undefined) {
+            ssdValue.innerHTML = `<div class="ssd-display">SSD: <span class="ssd-value">${details.ssd}</span></div>`;
+        } else {
+            ssdValue.innerHTML = "";
+        }
     }
 
     modal.classList.remove("hidden");
