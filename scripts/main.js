@@ -275,12 +275,12 @@ function displayResults(data) {
             Rs: ${data.params_genetique.Rs}<br>
             Rsh: ${data.params_genetique.Rsh}<br>
             n: ${data.params_genetique.n}
-            ${data.ssd_genetique ? '<br><strong>SSD: ' + formatNumber(data.ssd_genetique) + '</strong>' : ''}
+            ${data.ssd_gen ? '<br><strong>SSD: ' + formatNumber(data.ssd_gen) + '</strong>' : ''}
         `);
         resultDetails["gen"] = {
-            params: data.params_genetique,
+            params: data.params_gen,
             image: data.curve_image_gen || null,
-            ssd: data.ssd_genetique || null
+            ssd: data.ssd_gen || null
         };
     }
 
@@ -292,12 +292,12 @@ function displayResults(data) {
             Rs: ${data.params_random.Rs}<br>
             Rsh: ${data.params_random.Rsh}<br>
             n: ${data.params_random.n}
-            ${data.ssd_random ? '<br><strong>SSD: ' + formatNumber(data.ssd_random) + '</strong>' : ''}
+            ${data.ssd_rand ? '<br><strong>SSD: ' + formatNumber(data.ssd_rand) + '</strong>' : ''}
         `);
         resultDetails["rand"] = {
-            params: data.params_random,
+            params: data.params_rand,
             image: data.curve_image_rand || null,
-            ssd: data.ssd_random || null
+            ssd: data.ssd_rand || null
         };
     }
 
