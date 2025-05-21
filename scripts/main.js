@@ -593,7 +593,7 @@ function openDetailsModal(method) {
             <p><strong>n :</strong> ${details.params.n}</p>
         `;
         ssdValue.innerHTML = `
-            ${details.ssd ? `<p><strong>SSD :</strong> ${formatNumber(details.ssd)}</p>` : ''}
+            <p><strong>SSD :</strong> ${details.ssd)</p>
         `;
     }
 
