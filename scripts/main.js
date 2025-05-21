@@ -380,6 +380,7 @@ function displaySSD(ssdValues) {
 
 function createBoxplots() {
     // Si il n'y a qu'un seul résultat, on ne peut pas créer de boîtes à moustaches
+    console.log(allResults, allResults.length);
     if (allResults.length <= 1) {
         updatePlaceholder("#boxplot-zone", "Pas assez de données pour créer des boîtes à moustaches. Veuillez analyser plusieurs fichiers.");
         return;
