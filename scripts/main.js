@@ -216,11 +216,11 @@ function createAllBoxplots() {
                                             const stats = calculateBoxplotStats(rawValues);
                                             
                                             return [
-                                                `Min: ${formatNumber(stats.min)}`,
-                                                `Q1: ${formatNumber(stats.q1)}`,
-                                                `Médiane: ${formatNumber(stats.median)}`,
-                                                `Q3: ${formatNumber(stats.q3)}`,
-                                                `Max: ${formatNumber(stats.max)}`
+                                                `Min: ${stats.min}`,
+                                                `Q1: ${stats.q1}`,
+                                                `Médiane: ${stats.median}`,
+                                                `Q3: ${stats.q3}`,
+                                                `Max: ${stats.max}`
                                             ];
                                         } else if (context.dataset.type === 'scatter') {
                                             const point = context.raw;
