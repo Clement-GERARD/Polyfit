@@ -32,11 +32,18 @@ function createAllBoxplots() {
             const parameters = ['J0', 'Jph', 'Rs', 'Rsh', 'n'];
 
             parameters.forEach(paramKey => {
-                const canvasId = `${paramKey}-boxplot`; // ID du canvas à l'intérieur de la div
+                // CORRECTION ICI : Cibler l'ID du canvas réel, pas la div parente
+                const canvasId = `${paramKey}-boxplot-canvas`; 
                 const boxplotElement = document.getElementById(canvasId);
 
                 if (!boxplotElement || !boxplotElement.getContext) {
                     console.error(`Élément canvas '${canvasId}' non trouvé ou non supporté.`);
+                    // Afficher un message dans la div spécifique si le canvas n'est pas trouvé
+                    const parentDiv = document.getElementById(`${paramKey}-boxplot`);
+                    if (parentDiv) {
+                        parentDiv.innerHTML = `<div class="content-placeholder">Élément canvas '${canvasId}' non trouvé.</div>`;
+                        parentDiv.querySelector('.content-placeholder').style.display = 'flex';
+                    }
                     return; // Passer au paramètre suivant si le canvas n'existe pas
                 }
 
@@ -203,6 +210,7 @@ function createAllBoxplots() {
                 });
             });
         }
+
 // Fonction pour jouer avec le thème de la page
 function toggleTheme() {
     isDarkTheme = !isDarkTheme;
