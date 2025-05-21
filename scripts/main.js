@@ -240,7 +240,7 @@ function displayResults(data) {
             Jph: ${data.params_mlp.Jph}<br>
             Rs: ${data.params_mlp.Rs}<br>
             Rsh: ${data.params_mlp.Rsh}<br>
-            n: ${data.params_mlp.n}
+            n: ${data.params_mlp.n}<br>
             SSD: ${data.ssd_mlp}
         `);
         resultDetails["mlp"] = {
@@ -256,8 +256,8 @@ function displayResults(data) {
             Jph: ${data.params_cnn.Jph}<br>
             Rs: ${data.params_cnn.Rs}<br>
             Rsh: ${data.params_cnn.Rsh}<br>
-            n: ${data.params_cnn.n}
-            SSD: ${data.ssd_mlp}
+            n: ${data.params_cnn.n}<br>
+            SSD: ${data.ssd_cnn}
         `);
         resultDetails["cnn"] = {
             params: data.params_cnn,
@@ -272,8 +272,8 @@ function displayResults(data) {
             Jph: ${data.params_genetique.Jph}<br>
             Rs: ${data.params_genetique.Rs}<br>
             Rsh: ${data.params_genetique.Rsh}<br>
-            n: ${data.params_genetique.n}
-            SSD: ${data.ssd_mlp}
+            n: ${data.params_genetique.n}<br>
+            SSD: ${data.ssd_gen}
         `);
         resultDetails["gen"] = {
             params: data.params_genetique,
@@ -288,8 +288,8 @@ function displayResults(data) {
             Jph: ${data.params_random.Jph}<br>
             Rs: ${data.params_random.Rs}<br>
             Rsh: ${data.params_random.Rsh}<br>
-            n: ${data.params_random.n}
-            SSD: ${data.ssd_mlp}
+            n: ${data.params_random.n}<br>
+            SSD: ${data.ssd_rand}
         `);
         resultDetails["rand"] = {
             params: data.params_random,
@@ -577,6 +577,7 @@ function openDetailsModal(method) {
     const title = document.getElementById('modal-title');
 
     const details = resultDetails[method];
+    console.log("Résultat avant modale :", details);
 
     if (!details || !details.params) {
         console.warn("[WARN] Données manquantes pour la méthode :", method, details);
