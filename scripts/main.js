@@ -77,9 +77,6 @@ function createAllBoxplots() {
                 return;
             }
 
-            // Masquer le placeholder principal une fois que les graphiques sont prêts à être dessinés
-            updatePlaceholder("#boxplot-zone", "", 'none');
-
             const parameters = ['J0', 'Jph', 'Rs', 'Rsh', 'n'];
 
             parameters.forEach(paramKey => {
