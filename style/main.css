@@ -183,6 +183,7 @@ body {
  }
 
  .result-card h2 {
+  width: 105%;
   margin-top: 0;
   color: var(--primary-color);
   border-bottom: 2px solid #eee;
