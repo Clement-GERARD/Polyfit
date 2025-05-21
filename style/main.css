@@ -186,8 +186,8 @@ body {
   width: 105%;
   margin-top: 0;
   color: var(--primary-color);
-  border-bottom: 2px solid #eee;
   padding-bottom: 0.5rem;
+  text-align: center;
  }
 
  .content-placeholder {
