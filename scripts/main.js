@@ -13,6 +13,7 @@ function createBoxplots() {
     console.log(allResults, allResults.length);
     if (allResults.length <= 1) {
         updatePlaceholder("#boxplot-zone", "Pas assez de données pour créer des boîtes à moustaches. Veuillez analyser plusieurs fichiers.");
+        console.log("Arrêt de BoxPlots");
         return;
     }
 
@@ -326,7 +327,6 @@ async function uploadFile(file) {
             // Mettre à jour le tableau
             updateComparisonTable(data);
 
-            console.log(allResults, allResults.length);
             // Créer les boîtes à moustaches
             createBoxplots();
             
