@@ -32,7 +32,7 @@ function createAllBoxplots() {
             const parameters = ['J0', 'Jph', 'Rs', 'Rsh', 'n'];
 
             parameters.forEach(paramKey => {
-                const canvasId = `${paramKey}-boxplot-canvas`; // ID du canvas à l'intérieur de la div
+                const canvasId = `${paramKey}-boxplot`; // ID du canvas à l'intérieur de la div
                 const boxplotElement = document.getElementById(canvasId);
 
                 if (!boxplotElement || !boxplotElement.getContext) {
