@@ -10,6 +10,7 @@
     
     <!-- Bibliothèques externes -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-error-bars/build/index.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@sgratzl/chartjs-chart-boxplot@3.7.0/build/index.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -233,7 +234,9 @@
         <div class="modal-content">
              <span id="modal-close">&times;</span>
             <h3 id="modal-title">Détails de la méthode</h3>
-            <div id="distribution-zone" class="result-box"></div>
+            <div id="distribution-zone" class="result-box">
+                <canvas id="error-bar-chart" style="max-height:300px;"></canvas>
+            </div>
             <div id="curve-image-container"></div>
             <div id="ssd-value"></div>
         </div>
