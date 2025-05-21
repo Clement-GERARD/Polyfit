@@ -1,5 +1,4 @@
 // Fichier pour la gestion des visualisations avancées
-import * as d3 from 'd3';
 
 // Configuration générale des boîtes à moustaches
 const boxplotConfig = {
