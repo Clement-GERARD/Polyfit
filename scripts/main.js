@@ -7,6 +7,57 @@ const allResults = [];     // Stockage de tous les résultats pour les boîtes �
 let currentFileName = "";  // Nom du fichier en cours de traitement
 let charts = {};           // Stockage des instances de graphiques
 
+function calculateBoxplotStats(data) {
+            if (!data || data.length === 0) {
+                return { min: undefined, q1: undefined, median: undefined, q3: undefined, max: undefined };
+            }
+
+            const sortedData = [...data].sort((a, b) => a - b);
+            const n = sortedData.length;
+
+            const min = sortedData[0];
+            const max = sortedData[n - 1];
+
+            let median;
+            if (n % 2 === 0) {
+                median = (sortedData[n / 2 - 1] + sortedData[n / 2]) / 2;
+            } else {
+                median = sortedData[Math.floor(n / 2)];
+            }
+
+            // Calculer Q1 et Q3 en utilisant la méthode de la médiane inclusive (courante pour les petits ensembles de données)
+            let q1, q3;
+            if (n >= 4) {
+                // Utilisation de l'interpolation linéaire pour les quartiles, comme le comportement typique du plugin Chart.js boxplot
+                const getQuantile = (arr, q) => {
+                    const index = (arr.length - 1) * q;
+                    const lower = Math.floor(index);
+                    const upper = Math.ceil(index);
+                    const weight = index - lower;
+                    if (lower === upper) return arr[lower];
+                    return arr[lower] * (1 - weight) + arr[upper] * weight;
+                };
+
+                q1 = getQuantile(sortedData, 0.25);
+                q3 = getQuantile(sortedData, 0.75);
+
+            } else if (n === 3) {
+                q1 = sortedData[0]; // Plus petite valeur
+                q3 = sortedData[2]; // Plus grande valeur
+            } else if (n === 2) {
+                q1 = sortedData[0];
+                q3 = sortedData[1];
+            } else if (n === 1) {
+                q1 = sortedData[0];
+                q3 = sortedData[0];
+            } else {
+                q1 = undefined;
+                q3 = undefined;
+            }
+            
+            return { min, q1, median, q3, max };
+        }
+
 // Fonction pour les Moustaches
 function createAllBoxplots() {
             console.log("allResults:", allResults, "Length:", allResults.length);
