@@ -673,6 +673,10 @@ function openDetailsModal(method) {
         
         distributionZone.innerHTML = paramsHTML;
 
+
+        const canvas = document.getElementById('error-bar-chart');
+        const ctx = canvas ? canvas.getContext('2d') : null;
+
         if (details.error && ctx) {
             canvas.style.display = 'block'; // Ensure canvas is visible
             plotErrorBars(method, details.error);
