@@ -1,27 +1,31 @@
+/* Harmonisation graphique pour l'ensemble du site */
+
+/* Variables de couleurs et thèmes */
 :root {
-  --primary-color: #045475;
-  --color-1: #045475;
-  --color-2: #deeef1;
-  --color-3: #040425;
-  --color-4: #69acba;
-  --color-5: #709cbc;
-  --background-color: #f8f9fa;
+  --primary-color: #0056b3;
+  --secondary-color: #0a2f5c;
+  --accent-color: #0077cc;
+  --bg-color: #f0f4f8;
   --card-background: #ffffff;
   --text-color: #333333;
   --border-color: #e0e0e0;
-  --shadow-color: rgba(0, 0, 0, 0.1);
+  --success-color: #4caf50;
+  --warning-color: #ff9800;
+  --error-color: #f44336;
+  --info-color: #2196f3;
+  --shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --border-radius: 8px;
+  --transition-speed: 0.3s;
 }
 
-:root[data-theme='dark'] {
-  --primary-color: #045475;
-  --color-1: #045475;
-  --color-2: #deeef1;
-  --color-3: #040425;
-  --color-4: #69acba;
-  --color-5: #709cbc;
-  --background-color: #1a1a1a;
-  --card-background: #2c2c2c;
-  --text-color: #e0e0e0;
+/* Thème sombre */
+.dark-theme {
+  --primary-color: #4a89dc;
+  --secondary-color: #2c3e50;
+  --accent-color: #5d9cec;
+  --bg-color: #1e1e1e;
+  --card-background: #2d2d2d;
+  --text-color: #f0f0f0;
   --border-color: #444444;
-  --shadow-color: rgba(0, 0, 0, 0.3);
+  --shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
