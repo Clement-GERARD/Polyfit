@@ -61,11 +61,12 @@ function setupPresentationMode() {
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: var(--card-background);
+            background-color: var(--bg-color);
             z-index: 2000;
             overflow: hidden;
             display: flex;
             flex-direction: column;
+            color: var(--text-color);
         }
         
         .presentation-header {
@@ -126,13 +127,19 @@ function setupPresentationMode() {
             align-items: center;
             padding: 20px;
             opacity: 0;
-            transition: opacity 0.5s;
+            transition: opacity 0.5s, transform 0.5s;
             overflow: auto;
+            transform: translateX(100%);
         }
         
         .presentation-slide.active {
             opacity: 1;
             z-index: 1;
+            transform: translateX(0);
+        }
+        
+        .presentation-slide.prev {
+            transform: translateX(-100%);
         }
         
         .presentation-slide-content {
@@ -170,7 +177,7 @@ function setupPresentationMode() {
             justify-content: space-between;
             align-items: center;
             padding: 15px 20px;
-            background-color: var(--card-background);
+            background-color: var(--bg-color);
             border-top: 1px solid var(--border-color);
         }
         
@@ -230,6 +237,47 @@ function setupPresentationMode() {
             background-color: rgba(0, 0, 0, 0.1);
         }
         
+        .presentation-method-card {
+            background-color: var(--bg-color);
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+        
+        .presentation-method-title {
+            font-size: 24px;
+            margin-bottom: 15px;
+            color: var(--primary-color);
+        }
+        
+        .presentation-method-params {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .presentation-param-item {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .presentation-param-label {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .presentation-param-value {
+            font-family: monospace;
+        }
+        
+        .presentation-method-chart {
+            width: 100%;
+            height: 300px;
+        }
+        
         @media (max-width: 768px) {
             .presentation-title {
                 font-size: 18px;
@@ -246,6 +294,10 @@ function setupPresentationMode() {
             .presentation-slide-table th,
             .presentation-slide-table td {
                 padding: 8px 10px;
+            }
+            
+            .presentation-method-params {
+                grid-template-columns: 1fr;
             }
         }
     `;
@@ -284,6 +336,11 @@ function enterPresentationMode() {
     // Créer le conteneur du mode présentation
     const presentationContainer = document.createElement('div');
     presentationContainer.className = 'presentation-mode';
+    
+    // Appliquer le thème actuel
+    if (document.body.classList.contains('dark-theme')) {
+        presentationContainer.classList.add('dark-theme');
+    }
     
     // Créer l'en-tête
     const header = document.createElement('div');
@@ -375,142 +432,172 @@ function createPresentationSlides(container) {
     // Réinitialiser les diapositives
     presentationMode.slides = [];
     
-    // Diapositive 1: Résumé des fichiers analysés
-    const slide1 = createPresentationSlide('Résumé des fichiers analysés');
+    // Récupérer le résultat actuel
+    const currentResult = allResults[0]; // Utiliser le premier résultat par défaut
+    
+    // Diapositive 1: Nom du fichier
+    const slide1 = createPresentationSlide(`Fichier: ${currentResult.filename}`);
     const slide1Content = document.createElement('div');
     slide1Content.className = 'presentation-slide-content';
     
-    const filesTable = document.createElement('table');
-    filesTable.className = 'presentation-slide-table';
-    
-    // En-tête du tableau
-    const tableHeader = document.createElement('thead');
-    tableHeader.innerHTML = `
-        <tr>
-            <th>Fichier</th>
-            <th>Méthodes</th>
-            <th>Paramètres</th>
-        </tr>
+    const fileInfo = document.createElement('div');
+    fileInfo.className = 'presentation-file-info';
+    fileInfo.innerHTML = `
+        <p>Nom du fichier: <strong>${currentResult.filename}</strong></p>
+        <p>Méthodes d'analyse: <strong>${Object.keys(currentResult.methods).map(key => methodToName(key)).join(', ')}</strong></p>
     `;
     
-    // Corps du tableau
-    const tableBody = document.createElement('tbody');
-    
-    allResults.forEach(result => {
-        const row = document.createElement('tr');
-        
-        const fileCell = document.createElement('td');
-        fileCell.textContent = result.filename || 'Fichier sans nom';
-        
-        const methodsCell = document.createElement('td');
-        const methods = Object.keys(result.methods).map(key => methodToName(key)).join(', ');
-        methodsCell.textContent = methods;
-        
-        const paramsCell = document.createElement('td');
-        const params = Object.keys(result.methods[Object.keys(result.methods)[0]] || {}).join(', ');
-        paramsCell.textContent = params;
-        
-        row.appendChild(fileCell);
-        row.appendChild(methodsCell);
-        row.appendChild(paramsCell);
-        
-        tableBody.appendChild(row);
-    });
-    
-    filesTable.appendChild(tableHeader);
-    filesTable.appendChild(tableBody);
-    
-    slide1Content.appendChild(filesTable);
+    slide1Content.appendChild(fileInfo);
     slide1.appendChild(slide1Content);
     
-    // Diapositive 2: Tableau comparatif des méthodes
-    const slide2 = createPresentationSlide('Comparaison des méthodes');
+    // Diapositive 2: Courbe générale
+    const slide2 = createPresentationSlide('Courbe générale');
     const slide2Content = document.createElement('div');
     slide2Content.className = 'presentation-slide-content';
+    
+    const curveContainer = document.createElement('div');
+    curveContainer.className = 'presentation-chart-container';
+    
+    // Cloner la courbe générale
+    const curveElement = document.querySelector('#graph-zone .curve-image-all');
+    if (curveElement) {
+        const curveClone = curveElement.cloneNode(true);
+        curveClone.className = 'presentation-chart';
+        curveContainer.appendChild(curveClone);
+    } else {
+        curveContainer.innerHTML = '<p>Courbe générale non disponible</p>';
+    }
+    
+    slide2Content.appendChild(curveContainer);
+    slide2.appendChild(slide2Content);
+    
+    // Diapositives pour chaque méthode
+    const methods = [
+        { key: 'rand', name: 'Fit Classique' },
+        { key: 'mlp', name: 'MLP' },
+        { key: 'cnn', name: 'CNN' },
+        { key: 'gen', name: 'Génétique' }
+    ];
+    
+    methods.forEach(method => {
+        if (currentResult.methods[method.key]) {
+            const methodSlide = createPresentationSlide(`Méthode: ${method.name}`);
+            const methodContent = document.createElement('div');
+            methodContent.className = 'presentation-slide-content';
+            
+            const methodCard = document.createElement('div');
+            methodCard.className = 'presentation-method-card';
+            
+            const methodTitle = document.createElement('h3');
+            methodTitle.className = 'presentation-method-title';
+            methodTitle.textContent = method.name;
+            
+            const methodParams = document.createElement('div');
+            methodParams.className = 'presentation-method-params';
+            
+            // Ajouter les paramètres
+            const params = currentResult.methods[method.key];
+            for (const [paramKey, paramValue] of Object.entries(params)) {
+                const paramItem = document.createElement('div');
+                paramItem.className = 'presentation-param-item';
+                
+                const paramLabel = document.createElement('div');
+                paramLabel.className = 'presentation-param-label';
+                paramLabel.textContent = paramKey;
+                
+                const paramValueElem = document.createElement('div');
+                paramValueElem.className = 'presentation-param-value';
+                paramValueElem.textContent = formatNumber(paramValue);
+                
+                paramItem.appendChild(paramLabel);
+                paramItem.appendChild(paramValueElem);
+                methodParams.appendChild(paramItem);
+            }
+            
+            // Ajouter la courbe isolée
+            const methodChartContainer = document.createElement('div');
+            methodChartContainer.className = 'presentation-method-chart';
+            
+            // Cloner la courbe de la méthode
+            const methodCurveElement = document.querySelector(`#${method.key}-method .curve-image`);
+            if (methodCurveElement) {
+                const methodCurveClone = methodCurveElement.cloneNode(true);
+                methodCurveClone.style.width = '100%';
+                methodCurveClone.style.height = '100%';
+                methodChartContainer.appendChild(methodCurveClone);
+            } else {
+                methodChartContainer.innerHTML = '<p>Courbe non disponible</p>';
+            }
+            
+            methodCard.appendChild(methodTitle);
+            methodCard.appendChild(methodParams);
+            methodCard.appendChild(methodChartContainer);
+            
+            methodContent.appendChild(methodCard);
+            methodSlide.appendChild(methodContent);
+        }
+    });
+    
+    // Diapositive: Tableau comparatif
+    const tableSlide = createPresentationSlide('Tableau comparatif');
+    const tableContent = document.createElement('div');
+    tableContent.className = 'presentation-slide-content';
     
     // Cloner le tableau de comparaison
     const comparisonTable = document.getElementById('comparison-table');
     if (comparisonTable) {
         const tableClone = comparisonTable.cloneNode(true);
         tableClone.className = 'presentation-slide-table';
-        slide2Content.appendChild(tableClone);
+        tableContent.appendChild(tableClone);
     } else {
-        slide2Content.innerHTML = '<p>Tableau de comparaison non disponible</p>';
+        tableContent.innerHTML = '<p>Tableau de comparaison non disponible</p>';
     }
     
-    slide2.appendChild(slide2Content);
+    tableSlide.appendChild(tableContent);
     
-    // Diapositive 3: Graphique radar
-    const slide3 = createPresentationSlide('Comparaison radar des méthodes');
-    const slide3Content = document.createElement('div');
-    slide3Content.className = 'presentation-slide-content';
+    // Diapositive: Graphique radar
+    const radarSlide = createPresentationSlide('Graphique radar');
+    const radarContent = document.createElement('div');
+    radarContent.className = 'presentation-slide-content';
     
     const radarContainer = document.createElement('div');
     radarContainer.className = 'presentation-chart-container';
     
+    // Créer un canvas pour le graphique radar
     const radarCanvas = document.createElement('canvas');
     radarCanvas.id = 'presentation-radar-chart';
     radarCanvas.className = 'presentation-chart';
     
     radarContainer.appendChild(radarCanvas);
-    slide3Content.appendChild(radarContainer);
-    slide3.appendChild(slide3Content);
+    radarContent.appendChild(radarContainer);
+    radarSlide.appendChild(radarContent);
     
-    // Diapositive 4: Graphique SSD
-    const slide4 = createPresentationSlide('Comparaison des SSD');
-    const slide4Content = document.createElement('div');
-    slide4Content.className = 'presentation-slide-content';
+    // Diapositive: Boîtes à moustaches
+    const boxplotSlide = createPresentationSlide('Boîtes à moustaches');
+    const boxplotContent = document.createElement('div');
+    boxplotContent.className = 'presentation-slide-content';
     
-    const ssdContainer = document.createElement('div');
-    ssdContainer.className = 'presentation-chart-container';
+    const boxplotContainer = document.createElement('div');
+    boxplotContainer.className = 'presentation-chart-container';
     
-    const ssdCanvas = document.createElement('canvas');
-    ssdCanvas.id = 'presentation-ssd-chart';
-    ssdCanvas.className = 'presentation-chart';
+    // Cloner les boîtes à moustaches
+    const boxplotElement = document.querySelector('#boxplot-zone .boxplot-container');
+    if (boxplotElement) {
+        const boxplotClone = boxplotElement.cloneNode(true);
+        boxplotClone.style.width = '100%';
+        boxplotClone.style.height = '100%';
+        boxplotContainer.appendChild(boxplotClone);
+    } else {
+        boxplotContainer.innerHTML = '<p>Boîtes à moustaches non disponibles</p>';
+    }
     
-    ssdContainer.appendChild(ssdCanvas);
-    slide4Content.appendChild(ssdContainer);
-    slide4.appendChild(slide4Content);
-    
-    // Diapositives 5+: Boxplots pour chaque paramètre
-    const parameters = ['J0', 'Jph', 'Rs', 'Rsh', 'n', 'SSD'];
-    
-    parameters.forEach((param, index) => {
-        const slide = createPresentationSlide(`Distribution du paramètre ${param}`);
-        const slideContent = document.createElement('div');
-        slideContent.className = 'presentation-slide-content';
-        
-        const boxplotContainer = document.createElement('div');
-        boxplotContainer.className = 'presentation-chart-container';
-        
-        const boxplotCanvas = document.createElement('canvas');
-        boxplotCanvas.id = `presentation-${param}-boxplot`;
-        boxplotCanvas.className = 'presentation-chart';
-        
-        boxplotContainer.appendChild(boxplotCanvas);
-        slideContent.appendChild(boxplotContainer);
-        slide.appendChild(slideContent);
-        
-        container.appendChild(slide);
-        presentationMode.slides.push(slide);
-    });
-    
-    // Ajouter les diapositives au conteneur
-    container.appendChild(slide1);
-    container.appendChild(slide2);
-    container.appendChild(slide3);
-    container.appendChild(slide4);
-    
-    // Ajouter les diapositives à l'état
-    presentationMode.slides.unshift(slide1, slide2, slide3, slide4);
+    boxplotContent.appendChild(boxplotContainer);
+    boxplotSlide.appendChild(boxplotContent);
     
     // Activer la première diapositive
     if (presentationMode.slides.length > 0) {
         presentationMode.slides[0].classList.add('active');
     }
-    
-    // Initialiser les graphiques après un court délai
-    setTimeout(initPresentationCharts, 500);
 }
 
 // Fonction pour créer une diapositive
@@ -524,527 +611,19 @@ function createPresentationSlide(title) {
     
     slide.appendChild(slideTitle);
     
+    // Ajouter la diapositive au conteneur
+    const container = presentationMode.container.querySelector('.presentation-content');
+    if (container) {
+        container.appendChild(slide);
+    }
+    
+    // Ajouter la diapositive à la liste
+    presentationMode.slides.push(slide);
+    
     return slide;
 }
 
-// Fonction pour initialiser les graphiques de la présentation
-function initPresentationCharts() {
-    // Graphique radar
-    const radarCanvas = document.getElementById('presentation-radar-chart');
-    if (radarCanvas && typeof createRadarChart === 'function') {
-        // Créer un graphique radar personnalisé pour la présentation
-        createCustomRadarChart(radarCanvas);
-    }
-    
-    // Graphique SSD
-    const ssdCanvas = document.getElementById('presentation-ssd-chart');
-    if (ssdCanvas && typeof createSSDComparisonChart === 'function') {
-        // Créer un graphique SSD personnalisé pour la présentation
-        createCustomSSDChart(ssdCanvas);
-    }
-    
-    // Boxplots
-    const parameters = ['J0', 'Jph', 'Rs', 'Rsh', 'n', 'SSD'];
-    parameters.forEach(param => {
-        const boxplotCanvas = document.getElementById(`presentation-${param}-boxplot`);
-        if (boxplotCanvas) {
-            // Créer un boxplot personnalisé pour la présentation
-            createCustomBoxplot(boxplotCanvas, param);
-        }
-    });
-}
-
-// Fonction pour créer un graphique radar personnalisé
-function createCustomRadarChart(canvas) {
-    // Paramètres à comparer (sans SSD qui a une échelle différente)
-    const params = ['J0', 'Jph', 'Rs', 'Rsh', 'n'];
-    
-    // Préparer les données pour chaque méthode
-    const datasets = [];
-    const methodColors = {
-        rand: getComputedStyle(document.documentElement).getPropertyValue('--method-rand-color') || 'rgba(255, 99, 132, 0.7)',
-        mlp: getComputedStyle(document.documentElement).getPropertyValue('--method-mlp-color') || 'rgba(54, 162, 235, 0.7)',
-        cnn: getComputedStyle(document.documentElement).getPropertyValue('--method-cnn-color') || 'rgba(255, 206, 86, 0.7)',
-        gen: getComputedStyle(document.documentElement).getPropertyValue('--method-gen-color') || 'rgba(75, 192, 192, 0.7)'
-    };
-    
-    // Normaliser les valeurs pour chaque paramètre
-    const normalizedData = {};
-    
-    // Trouver les min/max pour chaque paramètre
-    const paramRanges = {};
-    params.forEach(param => {
-        paramRanges[param] = { min: Infinity, max: -Infinity };
-    });
-    
-    // Parcourir les résultats pour trouver les min/max
-    allResults.forEach(result => {
-        for (const [methodKey, methodParams] of Object.entries(result.methods)) {
-            for (const param of params) {
-                if (methodParams[param] !== undefined) {
-                    const value = parseFloat(methodParams[param]);
-                    if (!isNaN(value)) {
-                        paramRanges[param].min = Math.min(paramRanges[param].min, value);
-                        paramRanges[param].max = Math.max(paramRanges[param].max, value);
-                    }
-                }
-            }
-        }
-    });
-    
-    // Normaliser les données pour le dernier résultat
-    if (allResults.length > 0) {
-        const lastResult = allResults[allResults.length - 1];
-        
-        for (const [methodKey, methodParams] of Object.entries(lastResult.methods)) {
-            normalizedData[methodKey] = {};
-            
-            for (const param of params) {
-                if (methodParams[param] !== undefined) {
-                    const value = parseFloat(methodParams[param]);
-                    const range = paramRanges[param].max - paramRanges[param].min;
-                    
-                    // Éviter la division par zéro
-                    if (range === 0) {
-                        normalizedData[methodKey][param] = 0.5; // Valeur arbitraire au milieu
-                    } else {
-                        // Normaliser entre 0 et 1
-                        normalizedData[methodKey][param] = (value - paramRanges[param].min) / range;
-                    }
-                } else {
-                    normalizedData[methodKey][param] = 0;
-                }
-            }
-        }
-        
-        // Créer les datasets pour le graphique radar
-        for (const [methodKey, normalizedParams] of Object.entries(normalizedData)) {
-            const data = params.map(param => normalizedParams[param] || 0);
-            
-            datasets.push({
-                label: methodToName(methodKey),
-                data: data,
-                backgroundColor: methodColors[methodKey].replace(/[^,]+(?=\))/, '0.2'),
-                borderColor: methodColors[methodKey].replace(/[^,]+(?=\))/, '1'),
-                pointBackgroundColor: methodColors[methodKey].replace(/[^,]+(?=\))/, '1'),
-                pointBorderColor: '#fff',
-                pointHoverBackgroundColor: '#fff',
-                pointHoverBorderColor: methodColors[methodKey].replace(/[^,]+(?=\))/, '1'),
-                pointRadius: 6,
-                pointHoverRadius: 8
-            });
-        }
-        
-        // Créer le graphique radar
-        const ctx = canvas.getContext('2d');
-        const radarChart = new Chart(ctx, {
-            type: 'radar',
-            data: {
-                labels: params,
-                datasets: datasets
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    r: {
-                        angleLines: {
-                            color: isDarkTheme ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
-                            lineWidth: 2
-                        },
-                        grid: {
-                            color: isDarkTheme ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
-                            lineWidth: 2
-                        },
-                        pointLabels: {
-                            color: isDarkTheme ? '#e0e0e0' : '#333333',
-                            font: {
-                                size: 18,
-                                weight: 'bold'
-                            }
-                        },
-                        ticks: {
-                            backdropColor: 'transparent',
-                            color: isDarkTheme ? '#e0e0e0' : '#333333',
-                            font: {
-                                size: 14
-                            }
-                        }
-                    }
-                },
-                plugins: {
-                    legend: {
-                        position: 'top',
-                        labels: {
-                            color: isDarkTheme ? '#e0e0e0' : '#333333',
-                            font: {
-                                size: 16
-                            },
-                            padding: 20
-                        }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                const methodKey = context.dataset.label;
-                                const paramName = context.label;
-                                const normalizedValue = context.raw;
-                                
-                                // Retrouver la valeur originale
-                                const lastResult = allResults[allResults.length - 1];
-                                const methodData = lastResult.methods[getMethodKeyFromName(methodKey)];
-                                
-                                if (methodData && methodData[paramName] !== undefined) {
-                                    return `${methodKey} - ${paramName}: ${formatNumber(methodData[paramName])}`;
-                                }
-                                
-                                return `${methodKey} - ${paramName}: ${normalizedValue.toFixed(2)} (normalisé)`;
-                            }
-                        },
-                        titleFont: {
-                            size: 16
-                        },
-                        bodyFont: {
-                            size: 14
-                        },
-                        padding: 12
-                    }
-                }
-            }
-        });
-    }
-}
-
-// Fonction pour créer un graphique SSD personnalisé
-function createCustomSSDChart(canvas) {
-    // Préparer les données pour le graphique
-    const labels = [];
-    const datasets = {
-        rand: [],
-        mlp: [],
-        cnn: [],
-        gen: []
-    };
-    
-    // Collecter les valeurs SSD pour chaque fichier et méthode
-    allResults.forEach(result => {
-        labels.push(result.filename);
-        
-        for (const [methodKey, methodParams] of Object.entries(result.methods)) {
-            if (methodParams.SSD !== undefined) {
-                datasets[methodKey].push(parseFloat(methodParams.SSD));
-            } else {
-                datasets[methodKey].push(null);
-            }
-        }
-    });
-    
-    // Créer les datasets pour le graphique
-    const chartDatasets = [];
-    const methodColors = {
-        rand: getComputedStyle(document.documentElement).getPropertyValue('--method-rand-color') || 'rgba(255, 99, 132, 0.7)',
-        mlp: getComputedStyle(document.documentElement).getPropertyValue('--method-mlp-color') || 'rgba(54, 162, 235, 0.7)',
-        cnn: getComputedStyle(document.documentElement).getPropertyValue('--method-cnn-color') || 'rgba(255, 206, 86, 0.7)',
-        gen: getComputedStyle(document.documentElement).getPropertyValue('--method-gen-color') || 'rgba(75, 192, 192, 0.7)'
-    };
-    
-    for (const [methodKey, values] of Object.entries(datasets)) {
-        if (values.some(v => v !== null)) {
-            chartDatasets.push({
-                label: methodToName(methodKey),
-                data: values,
-                backgroundColor: methodColors[methodKey],
-                borderColor: methodColors[methodKey].replace(/[^,]+(?=\))/, '1'),
-                borderWidth: 2
-            });
-        }
-    }
-    
-    // Créer le graphique
-    if (chartDatasets.length > 0) {
-        const ctx = canvas.getContext('2d');
-        const ssdChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: chartDatasets
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        type: 'logarithmic',
-                        title: {
-                            display: true,
-                            text: 'SSD (échelle logarithmique)',
-                            color: isDarkTheme ? '#e0e0e0' : '#333333',
-                            font: {
-                                size: 18,
-                                weight: 'bold'
-                            }
-                        },
-                        grid: {
-                            color: isDarkTheme ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
-                            lineWidth: 2
-                        },
-                        ticks: {
-                            color: isDarkTheme ? '#e0e0e0' : '#333333',
-                            font: {
-                                size: 14
-                            },
-                            callback: function(value) {
-                                return value.toExponential(1);
-                            }
-                        }
-                    },
-                    x: {
-                        grid: {
-                            color: isDarkTheme ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
-                            lineWidth: 2
-                        },
-                        ticks: {
-                            color: isDarkTheme ? '#e0e0e0' : '#333333',
-                            font: {
-                                size: 14
-                            },
-                            maxRotation: 45,
-                            minRotation: 45
-                        }
-                    }
-                },
-                plugins: {
-                    legend: {
-                        position: 'top',
-                        labels: {
-                            color: isDarkTheme ? '#e0e0e0' : '#333333',
-                            font: {
-                                size: 16
-                            },
-                            padding: 20
-                        }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                const value = context.raw;
-                                if (value === null) return 'Pas de données';
-                                return `${context.dataset.label}: ${value.toExponential(4)}`;
-                            }
-                        },
-                        titleFont: {
-                            size: 16
-                        },
-                        bodyFont: {
-                            size: 14
-                        },
-                        padding: 12
-                    }
-                }
-            }
-        });
-    }
-}
-
-// Fonction pour créer un boxplot personnalisé
-function createCustomBoxplot(canvas, param) {
-    // Collecter toutes les données par méthode
-    const methodData = {
-        rand: [],
-        mlp: [],
-        cnn: [],
-        gen: []
-    };
-    
-    // Remplir les données
-    allResults.forEach(result => {
-        for (const [methodKey, methodParams] of Object.entries(result.methods)) {
-            if (methodParams[param] !== undefined) {
-                methodData[methodKey].push(parseFloat(methodParams[param]));
-            }
-        }
-    });
-    
-    // Vérifier si nous avons des données
-    const hasData = Object.values(methodData).some(values => values.length > 0);
-    
-    if (!hasData) {
-        return;
-    }
-    
-    // Couleurs pour les différentes méthodes
-    const methodColors = {
-        rand: getComputedStyle(document.documentElement).getPropertyValue('--method-rand-color') || 'rgba(255, 99, 132, 0.7)',
-        mlp: getComputedStyle(document.documentElement).getPropertyValue('--method-mlp-color') || 'rgba(54, 162, 235, 0.7)',
-        cnn: getComputedStyle(document.documentElement).getPropertyValue('--method-cnn-color') || 'rgba(255, 206, 86, 0.7)',
-        gen: getComputedStyle(document.documentElement).getPropertyValue('--method-gen-color') || 'rgba(75, 192, 192, 0.7)'
-    };
-    
-    // Préparer les données pour le boxplot
-    const allValues = [];
-    Object.values(methodData).forEach(values => {
-        allValues.push(...values);
-    });
-    
-    // Trier les valeurs pour calculer les statistiques
-    allValues.sort((a, b) => a - b);
-    
-    const min = allValues[0];
-    const max = allValues[allValues.length - 1];
-    const q1 = calculateQuantile(allValues, 0.25);
-    const median = calculateQuantile(allValues, 0.5);
-    const q3 = calculateQuantile(allValues, 0.75);
-    
-    // Dataset pour la boîte à moustaches
-    const boxplotDatasets = [{
-        label: param,
-        backgroundColor: 'rgba(200, 200, 200, 0.5)',
-        borderColor: 'rgba(150, 150, 150, 1)',
-        borderWidth: 2,
-        data: [{
-            min: min,
-            q1: q1,
-            median: median,
-            q3: q3,
-            max: max
-        }]
-    }];
-    
-    // Datasets pour les points de chaque méthode
-    for (const [methodKey, values] of Object.entries(methodData)) {
-        if (values.length > 0) {
-            boxplotDatasets.push({
-                label: methodToName(methodKey),
-                backgroundColor: methodColors[methodKey],
-                borderColor: methodColors[methodKey].replace(/[^,]+(?=\))/, '1'),
-                borderWidth: 2,
-                pointStyle: getMethodPointStyle(methodKey),
-                pointRadius: 8,
-                pointHoverRadius: 10,
-                data: values.map(value => ({
-                    x: param,
-                    y: value,
-                    method: methodKey
-                })),
-                type: 'scatter'
-            });
-        }
-    }
-    
-    // Créer le graphique
-    const ctx = canvas.getContext('2d');
-    const chart = new Chart(ctx, {
-        type: 'boxplot',
-        data: {
-            labels: [param],
-            datasets: boxplotDatasets
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'top',
-                    labels: {
-                        color: isDarkTheme ? '#e0e0e0' : '#333333',
-                        font: {
-                            size: 16
-                        },
-                        usePointStyle: true,
-                        padding: 20
-                    }
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            if (context.datasetIndex === 0) {
-                                // Boxplot tooltip
-                                const item = context.dataset.data[context.dataIndex];
-                                return [
-                                    `Min: ${formatNumber(item.min)}`,
-                                    `Q1: ${formatNumber(item.q1)}`,
-                                    `Médiane: ${formatNumber(item.median)}`,
-                                    `Q3: ${formatNumber(item.q3)}`,
-                                    `Max: ${formatNumber(item.max)}`
-                                ];
-                            } else {
-                                // Point tooltip
-                                const value = context.parsed.y;
-                                const method = context.dataset.label;
-                                return `${method}: ${formatNumber(value)}`;
-                            }
-                        }
-                    },
-                    titleFont: {
-                        size: 16
-                    },
-                    bodyFont: {
-                        size: 14
-                    },
-                    padding: 12
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: param !== 'SSD',
-                    title: {
-                        display: true,
-                        text: param,
-                        color: isDarkTheme ? '#e0e0e0' : '#333333',
-                        font: {
-                            size: 18,
-                            weight: 'bold'
-                        }
-                    },
-                    grid: {
-                        color: isDarkTheme ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
-                        lineWidth: 2
-                    },
-                    ticks: {
-                        color: isDarkTheme ? '#e0e0e0' : '#333333',
-                        font: {
-                            size: 14
-                        },
-                        callback: function(value) {
-                            return formatNumber(value);
-                        }
-                    }
-                },
-                x: {
-                    grid: {
-                        color: isDarkTheme ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
-                        lineWidth: 2
-                    },
-                    ticks: {
-                        color: isDarkTheme ? '#e0e0e0' : '#333333',
-                        font: {
-                            size: 14
-                        }
-                    }
-                }
-            }
-        }
-    });
-}
-
-// Fonction pour quitter le mode présentation
-function exitPresentationMode() {
-    if (presentationMode.container) {
-        // Quitter le mode plein écran
-        exitFullscreen();
-        
-        // Supprimer le conteneur
-        document.body.removeChild(presentationMode.container);
-        
-        // Mettre à jour l'état
-        presentationMode.active = false;
-        presentationMode.currentSlide = 0;
-        presentationMode.slides = [];
-        presentationMode.container = null;
-    }
-}
-
-// Fonction pour naviguer dans la présentation
+// Fonction pour naviguer entre les diapositives
 function navigatePresentation(direction) {
     // Calculer le nouvel index
     const newIndex = presentationMode.currentSlide + direction;
@@ -1054,35 +633,52 @@ function navigatePresentation(direction) {
         return;
     }
     
-    // Désactiver la diapositive actuelle
-    presentationMode.slides[presentationMode.currentSlide].classList.remove('active');
+    // Mettre à jour les classes pour l'animation
+    const currentSlide = presentationMode.slides[presentationMode.currentSlide];
+    const nextSlide = presentationMode.slides[newIndex];
     
-    // Mettre à jour l'index
+    // Déterminer la direction de l'animation
+    if (direction > 0) {
+        // Vers la droite
+        currentSlide.classList.remove('active');
+        currentSlide.classList.add('prev');
+        nextSlide.classList.remove('prev');
+        nextSlide.classList.add('active');
+    } else {
+        // Vers la gauche
+        currentSlide.classList.remove('active');
+        nextSlide.classList.remove('prev');
+        nextSlide.classList.add('active');
+        
+        // Ajouter un délai pour réinitialiser la classe prev
+        setTimeout(() => {
+            currentSlide.classList.add('prev');
+        }, 50);
+    }
+    
+    // Mettre à jour l'index courant
     presentationMode.currentSlide = newIndex;
-    
-    // Activer la nouvelle diapositive
-    presentationMode.slides[presentationMode.currentSlide].classList.add('active');
     
     // Mettre à jour la pagination
     updatePresentationPagination();
     
-    // Mettre à jour les boutons de navigation
-    updatePresentationNavigation();
+    // Mettre à jour l'état des boutons de navigation
+    updateNavigationButtons();
+    
+    // Initialiser les graphiques si nécessaire
+    initializeSlideCharts(newIndex);
 }
 
 // Fonction pour mettre à jour la pagination
 function updatePresentationPagination() {
-    const pagination = document.getElementById('presentation-pagination');
-    if (pagination) {
-        pagination.textContent = `Diapositive ${presentationMode.currentSlide + 1} / ${presentationMode.slides.length}`;
+    const paginationElement = document.getElementById('presentation-pagination');
+    if (paginationElement) {
+        paginationElement.textContent = `Diapositive ${presentationMode.currentSlide + 1} / ${presentationMode.slides.length}`;
     }
-    
-    // Mettre à jour les boutons de navigation
-    updatePresentationNavigation();
 }
 
-// Fonction pour mettre à jour les boutons de navigation
-function updatePresentationNavigation() {
+// Fonction pour mettre à jour l'état des boutons de navigation
+function updateNavigationButtons() {
     const prevButton = document.getElementById('presentation-prev');
     const nextButton = document.getElementById('presentation-next');
     
@@ -1095,26 +691,82 @@ function updatePresentationNavigation() {
     }
 }
 
-// Fonction pour gérer les touches clavier en mode présentation
-function handlePresentationKeydown(event) {
-    if (!presentationMode.active) {
-        return;
+// Fonction pour initialiser les graphiques d'une diapositive
+function initializeSlideCharts(slideIndex) {
+    const slide = presentationMode.slides[slideIndex];
+    if (!slide) return;
+    
+    // Vérifier s'il y a un graphique radar à initialiser
+    const radarCanvas = slide.querySelector('#presentation-radar-chart');
+    if (radarCanvas && !radarCanvas._chartInitialized) {
+        // Initialiser le graphique radar
+        createRadarChart(radarCanvas);
+        radarCanvas._chartInitialized = true;
     }
     
+    // Autres initialisations de graphiques si nécessaire
+}
+
+// Fonction pour créer un graphique radar
+function createRadarChart(canvas) {
+    // Cette fonction dépend de la structure des données et des bibliothèques de graphiques utilisées
+    // Implémentation à adapter selon les besoins
+}
+
+// Fonction pour quitter le mode présentation
+function exitPresentationMode() {
+    if (!presentationMode.active) return;
+    
+    // Supprimer le conteneur du mode présentation
+    if (presentationMode.container) {
+        presentationMode.container.remove();
+    }
+    
+    // Réinitialiser l'état du mode présentation
+    presentationMode.active = false;
+    presentationMode.currentSlide = 0;
+    presentationMode.slides = [];
+    presentationMode.container = null;
+    
+    // Quitter le mode plein écran si actif
+    exitFullscreen();
+}
+
+// Fonction pour gérer les touches clavier en mode présentation
+function handlePresentationKeydown(event) {
+    if (!presentationMode.active) return;
+    
     switch (event.key) {
-        case 'ArrowLeft':
-            navigatePresentation(-1);
-            break;
         case 'ArrowRight':
-        case 'Space':
+        case 'ArrowDown':
+        case ' ':
+        case 'PageDown':
             navigatePresentation(1);
+            event.preventDefault();
+            break;
+        case 'ArrowLeft':
+        case 'ArrowUp':
+        case 'PageUp':
+            navigatePresentation(-1);
+            event.preventDefault();
             break;
         case 'Escape':
             exitPresentationMode();
+            event.preventDefault();
             break;
-        case 'f':
-        case 'F':
-            toggleFullscreen();
+        case 'Home':
+            // Aller à la première diapositive
+            while (presentationMode.currentSlide > 0) {
+                navigatePresentation(-1);
+            }
+            event.preventDefault();
+            break;
+        case 'End':
+            // Aller à la dernière diapositive
+            while (presentationMode.currentSlide < presentationMode.slides.length - 1) {
+                navigatePresentation(1);
+            }
+            event.preventDefault();
             break;
     }
 }
@@ -1147,41 +799,14 @@ function exitFullscreen() {
 
 // Fonction pour basculer le mode plein écran
 function toggleFullscreen() {
-    if (document.fullscreenElement ||
-        document.webkitFullscreenElement ||
-        document.mozFullScreenElement ||
-        document.msFullscreenElement) {
-        exitFullscreen();
-    } else if (presentationMode.container) {
+    if (!document.fullscreenElement &&
+        !document.mozFullScreenElement &&
+        !document.webkitFullscreenElement &&
+        !document.msFullscreenElement) {
+        // Entrer en mode plein écran
         requestFullscreen(presentationMode.container);
-    }
-}
-
-// Fonction pour obtenir le style de point pour chaque méthode
-function getMethodPointStyle(method) {
-    const styles = {
-        rand: 'circle',
-        random: 'circle',
-        genetique: 'triangle',
-        gen: 'triangle',
-        mlp: 'rect',
-        cnn: 'star'
-    };
-    
-    return styles[method] || 'circle';
-}
-
-// Fonction pour calculer les quantiles (utilisée pour les boîtes à moustaches)
-function calculateQuantile(sortedArray, q) {
-    if (!sortedArray || sortedArray.length === 0) return 0;
-    
-    const pos = (sortedArray.length - 1) * q;
-    const base = Math.floor(pos);
-    const rest = pos - base;
-    
-    if (sortedArray[base + 1] !== undefined) {
-        return sortedArray[base] + rest * (sortedArray[base + 1] - sortedArray[base]);
     } else {
-        return sortedArray[base];
+        // Quitter le mode plein écran
+        exitFullscreen();
     }
 }
