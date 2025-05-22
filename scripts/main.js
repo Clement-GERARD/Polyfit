@@ -673,11 +673,15 @@ function openDetailsModal(method) {
         
         distributionZone.innerHTML = paramsHTML;
 
-        if (details.error) {
-                plotErrorBars(method, details.error);
-            } else {
-                document.getElementById('error-bar-chart').remove(); // ou vide le canvas si pas de data
-            }
+        if (details.error && ctx) {
+            canvas.style.display = 'block'; // Ensure canvas is visible
+            plotErrorBars(method, details.error);
+        } else if (canvas && ctx) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
+            canvas.style.display = 'none'; // Optionally hide the canvas if no data
+        } else {
+            distributionZone.innerHTML += "<p>Erreur lors de la récupération du contexte du graphique.</p>";
+        }
                 
         // Afficher l'image si disponible
         if (details.image) {
