@@ -4,6 +4,9 @@ document.addEventListener('DOMContentLoaded', function() {
     setupExportButtons();
 });
 
+const { jsPDF } = window.jspdf;
+const doc = new jsPDF();
+
 // Configuration des boutons d'export
 function setupExportButtons() {
     const exportCsvBtn = document.getElementById('export-csv-btn');
