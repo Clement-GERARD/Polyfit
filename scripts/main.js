@@ -357,7 +357,7 @@ function updatePlaceholder(selector, message) {
 }
 
 function updateTableCell(method, param, value) {
-    const cell = document.querySelector(`.${method}-${param}`);
+    const cell = document.querySelector(`.${method}-${param}-sortable`);
     if (cell) {
         cell.textContent = value;
     } else {
