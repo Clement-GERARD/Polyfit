@@ -892,3 +892,4 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById('toggle-theme-btn').addEventListener('click', toggleColorTheme);
     }
 });
+
