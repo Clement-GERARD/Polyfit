@@ -356,3 +356,4 @@ document.addEventListener('DOMContentLoaded', function() {
         updateTableWithSSD(data);
     };
 });
+
