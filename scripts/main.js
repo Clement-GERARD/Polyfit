@@ -440,7 +440,7 @@ function storeResults(data) {
 }
 
 function updateComparisonTable(data) {
-    console.log(data);
+    console.log('PATATE :', data);
     // Méthode MLP
     if (data.params_mlp) {
         updateTableCell("mlp", "J0", data.params_mlp.J0);
