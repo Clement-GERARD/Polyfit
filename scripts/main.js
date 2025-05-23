@@ -443,10 +443,15 @@ function updateComparisonTable(data) {
     // Méthode MLP
     if (data.params_mlp) {
         updateTableCell("mlp", "J0", data.params_mlp.J0);
+                console.log(data.params_mlp.J0);
         updateTableCell("mlp", "Jph", data.params_mlp.Jph);
+                console.log(data.params_mlp.Jph);
         updateTableCell("mlp", "Rs", data.params_mlp.Rs);
+                console.log(data.params_mlp.Rs);
         updateTableCell("mlp", "Rsh", data.params_mlp.Rsh);
+                console.log(data.params_mlp.Rsh);
         updateTableCell("mlp", "n", data.params_mlp.n);
+                console.log(data.params_mlp.n);
     }
 
     // Méthode CNN
