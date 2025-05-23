@@ -111,11 +111,11 @@
                     <table id="comparison-table">
                         <thead>
                             <tr>
-                                <th>Paramètre</th>
-                                <th>Fit Classique</th>
-                                <th>MLP</th>
-                                <th>CNN</th>
-                                <th>Génétique</th>
+                                <th data-sort="param">Paramètre </th>
+                                <th data-sort="rand">Fit Classique</th>
+                                <th data-sort="mlp">MLP</th>
+                                <th data-sort="cnn">CNN</th>
+                                <th data-sort="gen">Génétique</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -240,6 +240,39 @@
             </div>
             <div id="curve-image-container"></div>
             <div id="ssd-value"></div>
+        </div>
+    </div>
+
+    <div id="batch-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="modal-close" id="batch-modal-close">&times;</span>
+            <h3>Mode batch - Traitement multiple</h3>
+            <div class="batch-files-list">
+                <h4>Fichiers sélectionnés</h4>
+                <ul id="batch-files-list"></ul>
+            </div>
+            <div class="batch-progress">
+                <h4>Progression</h4>
+                <div class="progress-bar-container">
+                    <div id="batch-progress-bar" class="progress-bar"></div>
+                </div>
+                <div id="batch-progress-text" class="progress-text">0%</div>
+            </div>
+            <div class="batch-controls">
+                <button id="start-batch-btn" class="action-button">
+                    <i class="fas fa-play"></i> Démarrer le traitement
+                </button>
+                <button id="cancel-batch-btn" class="action-button">
+                    <i class="fas fa-times"></i> Annuler
+                </button>
+            </div>
+            <div id="batch-results-summary" class="batch-results-summary hidden">
+                <h4>Résumé des résultats</h4>
+                <div class="batch-summary-stats"></div>
+                <div class="batch-summary-chart-container">
+                    <canvas id="batch-summary-chart"></canvas>
+                </div>
+            </div>
         </div>
     </div>
 
