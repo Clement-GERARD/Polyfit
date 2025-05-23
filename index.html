@@ -186,7 +186,6 @@
                     </div>
                 </div>
             </div>
-
             <div class="result-card" id="comparison-zone">
                 <h2>📎 Comparaison des fichiers</h2>
                 <div class="file-selector">
@@ -202,28 +201,14 @@
                         <i class="fas fa-search"></i> Comparer
                     </button>
                 </div>
-                <div id="comparison-results" class="comparison-results">
-                    <div class="comparison-charts">
-                        <div class="comparison-chart-container">
-                            <canvas id="comparison-chart-1"></canvas>
-                        </div>
-                        <div class="comparison-chart-container">
-                            <canvas id="comparison-chart-2"></canvas>
-                        </div>
+                <div id="comparison-results" class="flex gap-4">
+                    <div class="comparison-side w-1/2">
+                        <div id="comparison-params-1"></div>
+                        <div id="comparison-chart-1"></div>
                     </div>
-                    <div class="comparison-table-container">
-                        <table id="comparison-diff-table" class="comparison-table">
-                            <thead>
-                                <tr>
-                                    <th>Paramètre</th>
-                                    <th>Fichier 1</th>
-                                    <th>Fichier 2</th>
-                                    <th>Différence</th>
-                                    <th>Différence %</th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
+                    <div class="comparison-side w-1/2">
+                        <div id="comparison-params-2"></div>
+                        <div id="comparison-chart-2"></div>
                     </div>
                 </div>
             </div>
