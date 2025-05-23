@@ -517,7 +517,7 @@ label[for="file-input"]:hover {
   color: var(--text-color);
 }
 
-.comparison-results {
+#comparison-results {
   display: flex;
   gap: 1%;
 }
