@@ -519,8 +519,11 @@ label[for="file-input"]:hover {
 
 .comparison-results {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
+  gap: 1%;
+}
+
+.comparison-side.w-1\/2 {
+    width: 50%;
 }
 
 .comparison-charts {
