@@ -440,6 +440,7 @@ function storeResults(data) {
 }
 
 function updateComparisonTable(data) {
+    console.log(data);
     // Méthode MLP
     if (data.params_mlp) {
         updateTableCell("mlp", "J0", data.params_mlp.J0);
