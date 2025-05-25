@@ -63,7 +63,6 @@ function createAllBoxplots() {
 
             // Vérifier si des résultats sont disponibles
             if (allResults.length === 0) {
-                updatePlaceholder("#boxplot-zone", "Pas de données disponibles pour créer des boîtes à moustaches. Veuillez analyser au moins un fichier.");
                 console.log("Arrêt de BoxPlots: Pas de données.");
                 return;
             }
