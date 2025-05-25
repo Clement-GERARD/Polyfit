@@ -570,6 +570,9 @@ async function processIndividualFile(index) {
 
         // Vérifier si l'analyse a réussi
         if (result.success) {
+
+            storeResults(result.data)
+            
             // Afficher les résultats (comme uploadFile)
             displayResults(result.data);
 
