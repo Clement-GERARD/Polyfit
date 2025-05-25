@@ -153,6 +153,18 @@ function updateComparisonCharts(data1, data2, filename1, filename2) {
     }
 }
 
+// Fonction pour mettre à jour le tableau de comparaison
+function updateComparisonTable(data1, data2) {
+    const table1Container = document.getElementById('comparison-params-1');
+    const table2Container = document.getElementById('comparison-params-2');
+
+    if (!table1Container || !table2Container) return;
+
+    // Créer les tableaux de paramètres
+    table1Container.innerHTML = createParamsTable(data1);
+    table2Container.innerHTML = createParamsTable(data2);
+}
+
 function createParamsTable(data) {
     if (!data) {
         return '<div class="error-message">Paramètres non disponibles</div>';
