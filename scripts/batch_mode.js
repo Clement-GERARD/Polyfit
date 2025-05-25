@@ -321,63 +321,64 @@ let batchFiles = [];
 let batchResults = [];
 let processingBatch = false;
 
-// Fonction pour activer/désactiver le mode batch
 function toggleBatchMode() {
     const wasActive = batchModeActive;
     batchModeActive = !batchModeActive;
-    
+
     // Mettre à jour l'affichage du conteneur de fichiers batch
     const batchFilesContainer = document.getElementById('batch-files-container');
-    
+
     if (batchModeActive) {
         document.body.classList.add('batch-mode-active');
-        
+
         // Afficher le conteneur s'il y a des fichiers
         if (batchFiles.length > 0) {
             batchFilesContainer.classList.remove('hidden');
         }
-        
+
         // Modifier le comportement du sélecteur de fichier
         const fileInput = document.getElementById('file-input');
         if (fileInput) {
             fileInput.multiple = true;
-            
+
             // Sauvegarder le gestionnaire d'événements original
             if (!fileInput._originalOnChange) {
                 fileInput._originalOnChange = fileInput.onchange;
             }
-            
+
             // Remplacer par notre gestionnaire pour le mode batch
             fileInput.onchange = handleBatchFiles;
         }
-        
+
         // Activer le mode comparaison
         document.body.classList.add('comparison-mode-active');
     } else {
         // Reset complet du mode batch
         document.body.classList.remove('batch-mode-active');
         batchFilesContainer.classList.add('hidden');
-        
+
         // Restaurer le comportement original du sélecteur de fichier
         const fileInput = document.getElementById('file-input');
         if (fileInput) {
             fileInput.multiple = false;
-            
+
             // Restaurer le gestionnaire d'événements original
             if (fileInput._originalOnChange) {
                 fileInput.onchange = fileInput._originalOnChange;
             }
+            // Si aucun gestionnaire original, on remet handleFiles
+            else {
+                fileInput.onchange = (event) => handleFiles(event);
+            }
         }
-        
+
         // Désactiver le mode comparaison
         document.body.classList.remove('comparison-mode-active');
-        
-        // Si le mode batch était actif avant, réinitialiser l'interface
-        if (wasActive) {
-            resetBatchMode();
-        }
+
+        // Réinitialiser l'interface et les données
+        resetBatchMode();
     }
-    
+
     // Mettre à jour le statut
     if (batchModeActive) {
         showToast('Mode batch activé', 'info');
@@ -547,108 +548,56 @@ function removeFileFromBatch(index) {
     }
 }
 
-// Fonction pour traiter un fichier individuel
 async function processIndividualFile(index) {
     if (processingBatch) {
         showToast('Impossible de traiter un fichier pendant le traitement batch', 'error');
         return;
     }
-    
+
     if (index < 0 || index >= batchFiles.length) {
         showToast('Fichier invalide', 'error');
         return;
     }
-    
+
     const file = batchFiles[index];
-    
+
     // Mettre à jour le statut du fichier
     updateBatchFileStatus(index, 'processing');
-    
+
     try {
         // Traiter le fichier en utilisant la fonction principale d'analyse
-        await analyzeFile(file);
-        
-        // Mettre à jour le statut du fichier
-        updateBatchFileStatus(index, 'done');
-        
-        showToast(`Fichier "${file.name}" traité avec succès`, 'success');
+        const result = await analyzeFile(file);
+
+        // Vérifier si l'analyse a réussi
+        if (result.success) {
+            // Afficher les résultats (comme uploadFile)
+            displayResults(result.data);
+
+            // Mettre à jour le tableau (si nécessaire)
+            updateComparisonTable(result.data);
+
+            // Créer les boîtes à moustaches (si nécessaire)
+            createAllBoxplots();
+
+            // Mettre à jour le statut du fichier
+            updateBatchFileStatus(index, 'done');
+
+            showToast(`Fichier "${file.name}" traité avec succès`, 'success');
+        } else {
+            // Gérer l'erreur d'analyse
+            updateBatchFileStatus(index, 'error');
+            showToast(`Erreur lors du traitement du fichier "${file.name}": ${result.error}`, 'error');
+        }
+
+
     } catch (error) {
         console.error(`Erreur lors du traitement du fichier ${file.name}:`, error);
-        
+
         // Mettre à jour le statut du fichier
         updateBatchFileStatus(index, 'error');
-        
+
         showToast(`Erreur lors du traitement du fichier "${file.name}"`, 'error');
     }
-}
-
-// Fonction pour analyser un fichier (remplace processFile)
-async function analyzeFile(file) {
-    return new Promise((resolve, reject) => {
-        // Vérifier si la fonction principale d'analyse existe
-        if (typeof processCSVFile === 'function') {
-            try {
-                // Utiliser la fonction principale d'analyse
-                processCSVFile(file, (result) => {
-                    if (result && result.success) {
-                        // Stocker le résultat dans batchResults
-                        const resultIndex = batchResults.findIndex(r => r.filename === file.name);
-                        if (resultIndex >= 0) {
-                            batchResults[resultIndex] = result.data;
-                        } else {
-                            batchResults.push(result.data);
-                        }
-                        resolve(result.data);
-                    } else {
-                        reject(new Error(result ? result.error : 'Erreur inconnue'));
-                    }
-                });
-            } catch (error) {
-                reject(error);
-            }
-        } else {
-            // Fallback si processCSVFile n'existe pas
-            const reader = new FileReader();
-            
-            reader.onload = function(e) {
-                try {
-                    // Simuler un traitement simple
-                    const content = e.target.result;
-                    const lines = content.split('\n');
-                    
-                    // Créer un résultat factice
-                    const result = {
-                        filename: file.name,
-                        data: lines.slice(0, 10),
-                        methods: {
-                            rand: { J0: 0.001, Jph: 35.2, Rs: 0.5, Rsh: 1000, n: 1.5, SSD: 0.002 },
-                            mlp: { J0: 0.0012, Jph: 35.0, Rs: 0.52, Rsh: 980, n: 1.48, SSD: 0.0018 },
-                            cnn: { J0: 0.0011, Jph: 35.1, Rs: 0.51, Rsh: 990, n: 1.49, SSD: 0.0019 },
-                            gen: { J0: 0.00105, Jph: 35.15, Rs: 0.505, Rsh: 995, n: 1.495, SSD: 0.00195 }
-                        }
-                    };
-                    
-                    // Stocker le résultat
-                    const resultIndex = batchResults.findIndex(r => r.filename === file.name);
-                    if (resultIndex >= 0) {
-                        batchResults[resultIndex] = result;
-                    } else {
-                        batchResults.push(result);
-                    }
-                    
-                    resolve(result);
-                } catch (error) {
-                    reject(error);
-                }
-            };
-            
-            reader.onerror = function() {
-                reject(new Error('Erreur de lecture du fichier'));
-            };
-            
-            reader.readAsText(file);
-        }
-    });
 }
 
 // Fonction pour mettre à jour la barre de progression
@@ -1007,5 +956,3 @@ function createToastContainer() {
     document.body.appendChild(container);
     return container;
 }
-
-
