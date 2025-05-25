@@ -1,4 +1,3 @@
-document.getElementById('file-input').addEventListener('change', handleFiles);
 document.getElementById('display-mode').addEventListener('change', toggleDisplayMode);
 document.getElementById('toggle-theme-btn').addEventListener('click', toggleTheme);
 
@@ -360,7 +359,6 @@ function updateTableCell(method, param, value) {
     const cell = document.querySelector(`.${method}-${param}`);
     if (cell) {
         cell.textContent = value;
-        console.log(cell, value);
     } else {
         console.error(`[ERROR] Cellule non trouvée : .${method}-${param}`);
     }
@@ -440,19 +438,13 @@ function storeResults(data) {
 }
 
 function updateComparisonTable(data) {
-    console.log('PATATE :', data);
     // Méthode MLP
     if (data.params_mlp) {
         updateTableCell("mlp", "J0", data.params_mlp.J0);
-                console.log(data.params_mlp.J0);
         updateTableCell("mlp", "Jph", data.params_mlp.Jph);
-                console.log(data.params_mlp.Jph);
         updateTableCell("mlp", "Rs", data.params_mlp.Rs);
-                console.log(data.params_mlp.Rs);
         updateTableCell("mlp", "Rsh", data.params_mlp.Rsh);
-                console.log(data.params_mlp.Rsh);
         updateTableCell("mlp", "n", data.params_mlp.n);
-                console.log(data.params_mlp.n);
     }
 
     // Méthode CNN
@@ -856,7 +848,7 @@ function toggleColorTheme() {
 
 document.addEventListener("DOMContentLoaded", () => {
 
-    
+
     document.getElementById("modal-close").addEventListener("click", () => {
         document.getElementById("details-modal").classList.add("hidden");
     });
@@ -867,34 +859,34 @@ document.addEventListener("DOMContentLoaded", () => {
             openDetailsModal(method);
         });
     });
-    
-    // Ajouter un gestionnaire pour traiter plusieurs fichiers
+
+    // Gestionnaire pour le sélecteur de fichiers
     document.getElementById('file-input').addEventListener('change', (event) => {
         const files = event.target.files;
-        if (files.length > 1) {
-            const confirmBatch = confirm(`Vous avez sélectionné ${files.length} fichiers. Voulez-vous les traiter tous en séquence?`);
-            
-            if (confirmBatch) {
-                processBatchFiles(files);
-            } else {
-                // Sinon, traiter juste le premier fichier comme d'habitude
-                handleFiles(event);
-            }
-        } else {
-            // Un seul fichier, comportement normal
+
+        if (!batchModeActive && files.length > 1) {
+            alert("Erreur : Veuillez activer le mode batch pour sélectionner plusieurs fichiers.");
+            // Réinitialiser la valeur de l'input file pour empêcher le traitement
+            document.getElementById('file-input').value = '';
+            return;
+        }
+
+        if (batchModeActive && files.length > 0) {
+            document.getElementById('batch-files-container').classList.remove('hidden');
+        } else if (!batchModeActive && files.length === 1) {
             handleFiles(event);
         }
     });
-    
+
     // Ajouter les nouveaux boutons de fonctionnalités
     if (document.getElementById('export-csv-btn')) {
         document.getElementById('export-csv-btn').addEventListener('click', exportResultsToCSV);
     }
-    
+
     if (document.getElementById('generate-pdf-btn')) {
         document.getElementById('generate-pdf-btn').addEventListener('click', generatePDFReport);
     }
-    
+
     if (document.getElementById('toggle-theme-btn')) {
         document.getElementById('toggle-theme-btn').addEventListener('click', toggleColorTheme);
     }
