@@ -754,7 +754,7 @@ function exportBatchToPDF() {
             let y = margin + 15;
             const paramKeys = ['J0', 'Jph', 'Rs', 'Rsh', 'n', 'SSD'];
 
-            for (const methodKey of ['random', 'mlp', 'genetique', 'cnn']) {
+            for (const methodKey of ['rand', 'mlp', 'gen', 'cnn']) {
                 const methodName = methodToName(methodKey);
                 const methodData = result.methods[methodKey];
                 if (!methodData) continue;
