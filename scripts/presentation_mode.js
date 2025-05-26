@@ -458,12 +458,11 @@ function createPresentationSlides(container) {
     const curveContainer = document.createElement('div');
     curveContainer.className = 'presentation-chart-container';
     
-    // Cloner la courbe générale
-    const curveElement = document.querySelector('#graph-zone .curve-image-all');
-    if (curveElement) {
-        const curveClone = curveElement.cloneNode(true);
-        curveClone.className = 'presentation-chart';
-        curveContainer.appendChild(curveClone);
+    if (currentResult.images && currentResult.images.all) {
+        const curveImage = document.createElement('img');
+        curveImage.src = 'data:image/png;base64,' + currentResult.images.all;
+        curveImage.className = 'presentation-chart';
+        curveContainer.appendChild(curveImage);
     } else {
         curveContainer.innerHTML = '<p>Courbe générale non disponible</p>';
     }
@@ -520,11 +519,12 @@ function createPresentationSlides(container) {
             
             // Cloner la courbe de la méthode
             const methodCurveElement = document.querySelector(`#${method.key}-method .curve-image`);
-            if (methodCurveElement) {
-                const methodCurveClone = methodCurveElement.cloneNode(true);
-                methodCurveClone.style.width = '100%';
-                methodCurveClone.style.height = '100%';
-                methodChartContainer.appendChild(methodCurveClone);
+            if (currentResult.images && currentResult.images[method.key]) {
+                const methodImage = document.createElement('img');
+                methodImage.src = 'data:image/png;base64,' + currentResult.images[method.key];
+                methodImage.style.width = '100%';
+                methodImage.style.height = '100%';
+                methodChartContainer.appendChild(methodImage);
             } else {
                 methodChartContainer.innerHTML = '<p>Courbe non disponible</p>';
             }
@@ -554,23 +554,6 @@ function createPresentationSlides(container) {
     }
     
     tableSlide.appendChild(tableContent);
-    
-    // Diapositive: Graphique radar
-    const radarSlide = createPresentationSlide('Graphique radar');
-    const radarContent = document.createElement('div');
-    radarContent.className = 'presentation-slide-content';
-    
-    const radarContainer = document.createElement('div');
-    radarContainer.className = 'presentation-chart-container';
-    
-    // Créer un canvas pour le graphique radar
-    const radarCanvas = document.createElement('canvas');
-    radarCanvas.id = 'presentation-radar-chart';
-    radarCanvas.className = 'presentation-chart';
-    
-    radarContainer.appendChild(radarCanvas);
-    radarContent.appendChild(radarContainer);
-    radarSlide.appendChild(radarContent);
     
     // Diapositive: Boîtes à moustaches
     const boxplotSlide = createPresentationSlide('Boîtes à moustaches');
