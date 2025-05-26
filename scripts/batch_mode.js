@@ -732,15 +732,17 @@ function exportBatchToPDF() {
     async function addFilePages() {
         for (let i = 0; i < batchFiles.length; i++) {
             const file = batchFiles[i];
+            console.log(file)
 
             // Forcer traitement si non encore analysé
             const alreadyProcessed = batchResults.some(r => r.filename === file.name);
             if (!alreadyProcessed) {
                 await processIndividualFile(i);
             }
-
+            
             const result = batchResults.find(r => r.filename === file.name);
             if (!result) continue;
+            console.log(result);
 
             doc.addPage();
             doc.setFontSize(titleFontSize);
