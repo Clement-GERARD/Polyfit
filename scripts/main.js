@@ -412,6 +412,7 @@ function storeResults(data) {
     const result = {
         filename: currentFileName,
         methods: {},
+        errors: {}, // Ajout d'un objet pour stocker les erreurs
         images : {}
     };
 
@@ -452,6 +453,23 @@ function storeResults(data) {
         result.images.all = data.curve_image_all;
     }
 
+    // Ajouter les erreurs (error bounds) pour chaque méthode
+    if (data.error_bounds_mlp) {
+        result.errors.mlp = data.error_bounds_mlp;
+    }
+
+    if (data.error_bounds_cnn) {
+        result.errors.cnn = data.error_bounds_cnn;
+    }
+
+    if (data.error_bounds_genetique) {
+        result.errors.gen = data.error_bounds_genetique;
+    }
+
+    if (data.error_bounds_random) {
+        result.errors.rand = data.error_bounds_random;
+    }
+    
     allResults.push(result);
 }
 
@@ -667,53 +685,64 @@ function openDetailsModal(method) {
     const curveImageContainer = document.getElementById('curve-image-container');
     const ssdValue = document.getElementById('ssd-value');
     const title = document.getElementById('modal-title');
+    const errorBarChartContainer = document.getElementById('error-bar-chart-container'); // Conteneur pour les graphiques de barres d'erreur
 
-    const details = resultDetails[method];
+    // Rechercher les détails correspondants dans allResults
+    const details = allResults.find(result => result.methods[method] !== undefined);
+
     console.log("Résultat avant modale :", details);
 
-    if (!details || !details.params) {
+    if (!details || !details.methods || !details.methods[method]) {
         console.warn("[WARN] Données manquantes pour la méthode :", method, details);
-        distributionZone.innerHTML = "<p>Aucune donnée disponible pour cette méthode.</p>";
+        distributionZone.innerHTML = "<p>Aucune donnée de paramètres disponible pour cette méthode.</p>";
         curveImageContainer.innerHTML = "";
         ssdValue.innerHTML = "";
+        errorBarChartContainer.innerHTML = ""; // Effacer les anciens graphiques
     } else {
         title.textContent = `Détails – ${methodToName(method)}`;
-        
-        // Afficher les paramètres
+
+        const params = details.methods[method];
+        const errors = details.errors ? details.errors[method] : null;
+
+        // Afficher les paramètres sous forme de tableau
         let paramsHTML = '<table class="params-table">';
         paramsHTML += '<tr><th>Paramètre</th><th>Valeur</th></tr>';
-        paramsHTML += `<tr><td>J0</td><td>${details.params.J0}</td></tr>`;
-        paramsHTML += `<tr><td>Jph</td><td>${details.params.Jph}</td></tr>`;
-        paramsHTML += `<tr><td>Rs</td><td>${details.params.Rs}</td></tr>`;
-        paramsHTML += `<tr><td>Rsh</td><td>${details.params.Rsh}</td></tr>`;
-        paramsHTML += `<tr><td>n</td><td>${details.params.n}</td></tr>`;
+        for (const paramName in params) {
+            if (params.hasOwnProperty(paramName)) {
+                paramsHTML += `<tr><td>${paramName}</td><td>${params[paramName]}</td></tr>`;
+            }
+        }
         paramsHTML += '</table>';
-        
         distributionZone.innerHTML = paramsHTML;
 
-
-        const canvas = document.getElementById('error-bar-chart');
-        const ctx = canvas ? canvas.getContext('2d') : null;
-
-        if (details.error && ctx) {
-            canvas.style.display = 'block'; // Ensure canvas is visible
-            plotErrorBars(method, details.error);
-        } else if (canvas && ctx) {
-            ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
-            canvas.style.display = 'none'; // Optionally hide the canvas if no data
+        // Créer et afficher les graphiques de barres d'erreur
+        errorBarChartContainer.innerHTML = ''; // Effacer les anciens graphiques
+        if (errors) {
+            for (const paramName in errors) {
+                if (errors.hasOwnProperty(paramName) && errors[paramName].min !== undefined && errors[paramName].max !== undefined && errors[paramName].central !== undefined) {
+                    const canvasId = `error-bar-canvas-${method}-${paramName}`;
+                    errorBarChartContainer.innerHTML += `<canvas id="${canvasId}" width="200" height="150" style="margin-right: 10px;"></canvas>`;
+                    const canvas = document.getElementById(canvasId);
+                    const ctx = canvas.getContext('2d');
+                    plotErrorBarChart(ctx, paramName, errors[paramName].min, errors[paramName].max, errors[paramName].central);
+                }
+            }
         } else {
-            distributionZone.innerHTML += "<p>Erreur lors de la récupération du contexte du graphique.</p>";
+            errorBarChartContainer.innerHTML = "<p>Barres d'erreur non disponibles pour cette méthode.</p>";
         }
-                
+
         // Afficher l'image si disponible
-        if (details.image) {
-            curveImageContainer.innerHTML = `<img src="data:image/png;base64,${details.image}" alt="Courbe ${method}" style="width:100%; margin-top:15px; border-radius:8px;">`;
+        const imageName = `curve_image_${method.replace('gen', 'gen')}`; // Ajustement pour 'gen'
+        if (details.images && details.images[imageName]) {
+            curveImageContainer.innerHTML = `<img src="data:image/png;base64,${details.images[imageName]}" alt="Courbe ${methodToName(method)}" style="width:100%; margin-top:15px; border-radius:8px;">`;
         } else {
             curveImageContainer.innerHTML = "";
         }
-        // Afficher le SSD si disponible
-        if (details.ssd !== null && details.ssd !== undefined) {
-            ssdValue.innerHTML = `<div class="ssd-display">SSD: <span class="ssd-value">${details.ssd}</span></div>`;
+
+        // Afficher le SSD si disponible (rechercher la clé ssd correspondante)
+        const ssdKey = `ssd_${method.replace('gen', 'gen')}`; // Ajustement pour 'gen'
+        if (details.hasOwnProperty(ssdKey) && details[ssdKey] !== null && details[ssdKey] !== undefined) {
+            ssdValue.innerHTML = `<div class="ssd-display">SSD: <span class="ssd-value">${details[ssdKey]}</span></div>`;
         } else {
             ssdValue.innerHTML = "";
         }
@@ -722,58 +751,84 @@ function openDetailsModal(method) {
     modal.classList.remove("hidden");
 }
 
-function plotErrorBars(method, statsData) {
-    const ctx = document.getElementById('error-bar-chart').getContext('2d');
-    if (!statsData || !statsData.means) return;
+function plotErrorBarChart(ctx, paramName, minValue, maxValue, centralValue) {
+    const barHeight = 30;
+    const centerLineThickness = 2;
+    const errorBarThickness = 1;
+    const paddingLeft = 50;
+    const paddingBottom = 30;
+    const textOffset = 5;
 
-    const labels = ['J0', 'Jph', 'Rs', 'Rsh', 'n'];
-    const means = statsData.means;
-    const mins = statsData.mins;
-    const maxs = statsData.maxs;
+    const canvasWidth = ctx.canvas.width;
+    const canvasHeight = ctx.canvas.height;
 
-    const errorBarData = {
-        labels: labels,
-        datasets: [{
-            label: `${methodToName(method)} – Moyenne et écart`,
-            data: labels.map(param => ({
-                x: means[param],
-                xMin: mins[param],
-                xMax: maxs[param]
-            })),
-            parsing: {
-                xAxisKey: 'x',
-                xMinKey: 'xMin',
-                xMaxKey: 'xMax'
-            },
-            backgroundColor: 'rgba(54, 162, 235, 0.5)',
-            borderColor: 'rgb(54, 162, 235)',
-            borderWidth: 1,
-            errorBarColor: 'rgb(54, 162, 235)',
-            type: 'barWithErrorBars'
-        }]
-    };
-
-    const config = {
-        type: 'barWithErrorBars',
-        data: errorBarData,
-        options: {
-            indexAxis: 'y',
-            responsive: true,
-            plugins: {
-                legend: { display: false },
-                tooltip: { enabled: true }
-            },
-            scales: {
-                x: { title: { display: true, text: 'Valeur' } },
-                y: { title: { display: true, text: 'Paramètre' } }
+    // Trouver la plage globale pour normaliser les valeurs
+    let minGlobal = Infinity;
+    let maxGlobal = -Infinity;
+    allResults.forEach(result => {
+        const errors = result.errors;
+        if (errors) {
+            for (const methodErrors in errors) {
+                if (errors[methodErrors] && errors[methodErrors][paramName]) {
+                    minGlobal = Math.min(minGlobal, errors[methodErrors][paramName].min);
+                    maxGlobal = Math.max(maxGlobal, errors[methodErrors][paramName].max);
+                }
             }
         }
-    };
+    });
 
-    if (window.errorBarChart) {
-        window.errorBarChart.destroy();
+    // Si minGlobal et maxGlobal sont égaux, on ajuste légèrement pour éviter la division par zéro
+    if (minGlobal === maxGlobal) {
+        minGlobal -= Math.abs(centralValue) * 0.1;
+        maxGlobal += Math.abs(centralValue) * 0.1;
+        if (minGlobal === maxGlobal) { // Cas où centralValue est aussi 0
+            minGlobal = -1;
+            maxGlobal = 1;
+        }
     }
-    window.errorBarChart = new Chart(ctx, config);
+
+    const scale = (value) => paddingLeft + (canvasWidth - 2 * paddingLeft) * (value - minGlobal) / (maxGlobal - minGlobal);
+
+    // Dessiner l'axe horizontal
+    ctx.beginPath();
+    ctx.moveTo(paddingLeft, canvasHeight - paddingBottom);
+    ctx.lineTo(canvasWidth - paddingLeft, canvasHeight - paddingBottom);
+    ctx.strokeStyle = 'black';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Dessiner le nom du paramètre sur l'axe Y
+    ctx.fillStyle = 'black';
+    ctx.font = '12px Arial';
+    ctx.textAlign = 'left';
+    ctx.fillText(paramName, 10, canvasHeight / 2);
+
+    // Dessiner la barre d'erreur
+    const yCenter = canvasHeight / 2 - barHeight / 2;
+    const xMin = scale(minValue);
+    const xMax = scale(maxValue);
+    const xCentral = scale(centralValue);
+
+    ctx.beginPath();
+    ctx.moveTo(xMin, yCenter + barHeight / 2);
+    ctx.lineTo(xMax, yCenter + barHeight / 2);
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.lineWidth = errorBarThickness * 2;
+    ctx.stroke();
+
+    // Dessiner la ligne centrale
+    ctx.beginPath();
+    ctx.moveTo(xCentral, yCenter);
+    ctx.lineTo(xCentral, yCenter + barHeight);
+    ctx.strokeStyle = 'blue';
+    ctx.lineWidth = centerLineThickness;
+    ctx.stroke();
+
+    // Afficher la valeur centrale
+    ctx.fillStyle = 'blue';
+    ctx.font = '10px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText(centralValue.toFixed(3), xCentral, yCenter - textOffset);
 }
 
 // Permettre le traitement batch des fichiers
