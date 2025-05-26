@@ -184,289 +184,143 @@ function exportToExcel() {
     showToast('Export Excel réussi', 'success');
 }
 
-// Fonction pour générer un PDF des résultats
 function generatePDF() {
     if (allResults.length === 0) {
         showToast('Aucune donnée pour générer le PDF', 'error');
         return;
     }
-    
-    // Afficher un message de chargement
+
     showToast('Génération du PDF en cours...', 'info');
-    
-    // Utiliser la bibliothèque jsPDF
+
     const { jsPDF } = window.jspdf;
-    
-    // Créer un nouveau document PDF
-    const doc = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4'
-    });
-    
-    // Définir les styles
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
     const titleFontSize = 16;
     const subtitleFontSize = 14;
     const normalFontSize = 11;
     const smallFontSize = 9;
-    
+
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
     const margin = 15;
     const contentWidth = pageWidth - 2 * margin;
-    
-    // Ajouter un titre
+
+    // --- Page de garde ---
     doc.setFontSize(titleFontSize);
     doc.setFont('helvetica', 'bold');
     doc.text('Rapport d\'analyse Polyfit AI', pageWidth / 2, margin, { align: 'center' });
-    
-    // Ajouter la date
+
     doc.setFontSize(normalFontSize);
     doc.setFont('helvetica', 'normal');
     const today = new Date();
     const dateStr = today.toLocaleDateString();
-    doc.text(`Date: ${dateStr}`, pageWidth - margin, margin, { align: 'right' });
-    
-    // Fonction pour ajouter une page par méthode
-    function addMethodPage(methodKey, methodName) {
-        // Ajouter une nouvelle page
+    doc.text(`Date: ${dateStr}`, pageWidth - margin, margin + 10, { align: 'right' });
+
+    // Liste des fichiers
+    doc.setFontSize(subtitleFontSize);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Fichiers analysés', margin, margin + 25);
+
+    doc.setFontSize(normalFontSize);
+    doc.setFont('helvetica', 'normal');
+    const fileNames = [...new Set(allResults.map(result => result.filename))];
+    let y = margin + 33;
+    fileNames.forEach(filename => {
+        doc.text(`• ${filename}`, margin + 5, y);
+        y += 6;
+        if (y > pageHeight - margin) {
+            doc.addPage();
+            y = margin;
+        }
+    });
+
+    // Image curve_image_all (uniquement une fois, prise sur le premier élément qui l’a)
+    const allImg = allResults.find(r => r.images?.all)?.images?.all;
+    if (allImg) {
+        const imgHeight = contentWidth * 0.75;
+        if (y + imgHeight > pageHeight - margin) {
+            doc.addPage();
+            y = margin;
+        }
+        doc.addImage(allImg, 'PNG', margin, y + 10, contentWidth, imgHeight);
+    }
+
+    // --- Pages par méthode ---
+    const methodList = [
+        { key: 'rand', name: 'Fit Classique' },
+        { key: 'mlp', name: 'MLP' },
+        { key: 'cnn', name: 'CNN' },
+        { key: 'gen', name: 'Génétique' }
+    ];
+
+    methodList.forEach(({ key, name }) => {
+        // Extraire les lignes de résultats existants
+        const rows = allResults
+            .filter(r => r.methods[key])
+            .map(r => ({
+                filename: r.filename,
+                j0: r.methods[key].J0,
+                jph: r.methods[key].Jph,
+                rs: r.methods[key].Rs,
+                rsh: r.methods[key].Rsh,
+                n: r.methods[key].n,
+                ssd: r.methods[key].SSD,
+                img: r.images?.[key] || null
+            }));
+
+        if (rows.length === 0) return;
+
         doc.addPage();
-        
-        // Titre de la page
         doc.setFontSize(titleFontSize);
         doc.setFont('helvetica', 'bold');
-        doc.text(`Méthode: ${methodName}`, pageWidth / 2, margin, { align: 'center' });
-        
-        let yPosition = margin + 15;
-        
-        // Tableau des paramètres pour cette méthode
+        doc.text(`Méthode : ${name}`, pageWidth / 2, margin, { align: 'center' });
+
+        // Paramètres
         doc.setFontSize(subtitleFontSize);
-        doc.setFont('helvetica', 'bold');
-        doc.text('Paramètres', margin, yPosition);
-        yPosition += 10;
-        
-        // Créer le tableau des paramètres
-        const paramData = [];
-        const paramColumns = [
-            { header: 'Fichier', dataKey: 'filename' },
-            { header: 'J0', dataKey: 'j0' },
-            { header: 'Jph', dataKey: 'jph' },
-            { header: 'Rs', dataKey: 'rs' },
-            { header: 'Rsh', dataKey: 'rsh' },
-            { header: 'n', dataKey: 'n' },
-            { header: 'SSD', dataKey: 'ssd' }
-        ];
-        
-        // Remplir les données du tableau
-        allResults.forEach(result => {
-            if (result.methods[methodKey]) {
-                const methodParams = result.methods[methodKey];
-                paramData.push({
-                    filename: result.filename,
-                    j0: methodParams.J0,
-                    jph: methodParams.Jph,
-                    rs: methodParams.Rs,
-                    rsh: methodParams.Rsh,
-                    n: methodParams.n,
-                    ssd: methodParams.SSD
-                });
-            }
-        });
-        
-        // Ajouter le tableau au PDF
+        doc.text('Paramètres prédits', margin, margin + 15);
+
         doc.autoTable({
-            startY: yPosition,
-            head: [paramColumns.map(col => col.header)],
-            body: paramData.map(row => paramColumns.map(col => row[col.dataKey])),
-            margin: { top: margin, right: margin, bottom: margin, left: margin },
+            startY: margin + 22,
+            head: [[ 'Fichier', 'J0', 'Jph', 'Rs', 'Rsh', 'n', 'SSD' ]],
+            body: rows.map(r => [
+                r.filename,
+                r.j0?.toExponential?.(2) ?? '',
+                r.jph?.toFixed?.(3) ?? '',
+                r.rs?.toFixed?.(3) ?? '',
+                r.rsh?.toFixed?.(3) ?? '',
+                r.n?.toFixed?.(3) ?? '',
+                r.ssd?.toExponential?.(2) ?? ''
+            ]),
             styles: { fontSize: smallFontSize },
             headStyles: { fillColor: [4, 84, 117], textColor: [255, 255, 255] },
             alternateRowStyles: { fillColor: [240, 240, 240] },
-            tableWidth: 'auto'
+            margin: { left: margin, right: margin }
         });
-        
-        // Mettre à jour la position Y après le tableau
-        yPosition = doc.lastAutoTable.finalY + 15;
-        
-        // Ajouter le graphique de la méthode si disponible
+
+        // Position après le tableau
+        let yImg = doc.lastAutoTable.finalY + 10;
+
         doc.setFontSize(subtitleFontSize);
         doc.setFont('helvetica', 'bold');
-        doc.text('Courbe isolée', margin, yPosition);
-        yPosition += 10;
-        
-        // Capturer et ajouter le graphique de la méthode
-        return new Promise(async (resolve) => {
-            try {
-                // Chercher le graphique de la méthode
-                const methodChartElement = document.querySelector(`#${methodKey}-method .curve-image`);
-                
-                if (methodChartElement) {
-                    // Capturer le graphique en tant qu'image
-                    const canvas = await html2canvas(methodChartElement, {
-                        scale: 2,
-                        logging: false,
-                        useCORS: true
-                    });
-                    
-                    const imgData = canvas.toDataURL('image/png');
-                    
-                    // Calculer les dimensions de l'image pour qu'elle tienne sur la page
-                    const imgWidth = contentWidth;
-                    const imgHeight = contentWidth * 0.6; // Ratio approximatif
-                    
-                    // Ajouter l'image
-                    doc.addImage(imgData, 'PNG', margin, yPosition, imgWidth, imgHeight);
-                }
-                
-                resolve();
-            } catch (error) {
-                console.error(`Erreur lors de la capture du graphique pour ${methodName}:`, error);
-                resolve();
+        doc.text('Courbe associée', margin, yImg);
+        yImg += 5;
+
+        // Affiche la première image disponible
+        const firstImage = rows.find(r => r.img)?.img;
+        if (firstImage) {
+            const imgHeight = contentWidth * 0.6;
+            if (yImg + imgHeight > pageHeight - margin) {
+                doc.addPage();
+                yImg = margin;
             }
-        });
-    }
-    
-    // Fonction pour ajouter la page de la courbe générale
-    function addCurveAllPage() {
-        // Ajouter une nouvelle page
-        doc.addPage();
-        
-        // Titre de la page
-        doc.setFontSize(titleFontSize);
-        doc.setFont('helvetica', 'bold');
-        doc.text('Courbe générale', pageWidth / 2, margin, { align: 'center' });
-        
-        let yPosition = margin + 15;
-        
-        // Ajouter le graphique de la courbe générale
-        return new Promise(async (resolve) => {
-            try {
-                // Chercher le graphique de la courbe générale
-                const curveAllElement = document.querySelector('#graph-zone .curve-image-all');
-                
-                if (curveAllElement) {
-                    // Capturer le graphique en tant qu'image
-                    const canvas = await html2canvas(curveAllElement, {
-                        scale: 2,
-                        logging: false,
-                        useCORS: true
-                    });
-                    
-                    const imgData = canvas.toDataURL('image/png');
-                    
-                    // Calculer les dimensions de l'image pour qu'elle tienne sur la page
-                    const imgWidth = contentWidth;
-                    const imgHeight = contentWidth * 0.75; // Ratio approximatif
-                    
-                    // Ajouter l'image
-                    doc.addImage(imgData, 'PNG', margin, yPosition, imgWidth, imgHeight);
-                }
-                
-                resolve();
-            } catch (error) {
-                console.error('Erreur lors de la capture de la courbe générale:', error);
-                resolve();
-            }
-        });
-    }
-    
-    // Fonction pour ajouter la page des boîtes à moustaches
-    function addBoxplotPage() {
-        // Ajouter une nouvelle page
-        doc.addPage();
-        
-        // Titre de la page
-        doc.setFontSize(titleFontSize);
-        doc.setFont('helvetica', 'bold');
-        doc.text('Boîtes à moustaches', pageWidth / 2, margin, { align: 'center' });
-        
-        let yPosition = margin + 15;
-        
-        // Ajouter le graphique des boîtes à moustaches
-        return new Promise(async (resolve) => {
-            try {
-                // Chercher le conteneur des boîtes à moustaches
-                const boxplotElement = document.querySelector('#boxplot-zone .boxplot-container');
-                
-                if (boxplotElement) {
-                    // Capturer le graphique en tant qu'image
-                    const canvas = await html2canvas(boxplotElement, {
-                        scale: 2,
-                        logging: false,
-                        useCORS: true
-                    });
-                    
-                    const imgData = canvas.toDataURL('image/png');
-                    
-                    // Calculer les dimensions de l'image pour qu'elle tienne sur la page
-                    const imgWidth = contentWidth;
-                    const imgHeight = contentWidth * 0.75; // Ratio approximatif
-                    
-                    // Ajouter l'image
-                    doc.addImage(imgData, 'PNG', margin, yPosition, imgWidth, imgHeight);
-                }
-                
-                resolve();
-            } catch (error) {
-                console.error('Erreur lors de la capture des boîtes à moustaches:', error);
-                resolve();
-            }
-        });
-    }
-    
-    // Générer le PDF avec la structure demandée
-    async function generateStructuredPDF() {
-        try {
-            // Page de couverture avec informations générales
-            let yPosition = margin + 25;
-            
-            // Ajouter un résumé des fichiers analysés
-            doc.setFontSize(subtitleFontSize);
-            doc.setFont('helvetica', 'bold');
-            doc.text('Fichiers analysés', margin, yPosition);
-            
-            yPosition += 8;
-            doc.setFontSize(normalFontSize);
-            doc.setFont('helvetica', 'normal');
-            
-            // Liste des fichiers
-            const fileNames = [...new Set(allResults.map(result => result.filename))];
-            fileNames.forEach(filename => {
-                doc.text(`• ${filename}`, margin + 5, yPosition);
-                yPosition += 6;
-                
-                // Vérifier si on doit passer à une nouvelle page
-                if (yPosition > pageHeight - margin) {
-                    doc.addPage();
-                    yPosition = margin;
-                }
-            });
-            
-            // Ajouter une page pour chaque méthode
-            await addMethodPage('rand', 'Fit Classique');
-            await addMethodPage('mlp', 'MLP');
-            await addMethodPage('cnn', 'CNN');
-            await addMethodPage('gen', 'Génétique');
-            
-            // Ajouter la page de la courbe générale
-            await addCurveAllPage();
-            
-            // Ajouter la page des boîtes à moustaches
-            await addBoxplotPage();
-            
-            // Sauvegarder le PDF
-            doc.save('polyfit_rapport.pdf');
-            
-            showToast('Génération du PDF réussie', 'success');
-        } catch (error) {
-            console.error('Erreur lors de la génération du PDF:', error);
-            showToast('Erreur lors de la génération du PDF', 'error');
+            doc.addImage(firstImage, 'PNG', margin, yImg, contentWidth, imgHeight);
         }
-    }
-    
-    // Lancer la génération du PDF structuré
-    generateStructuredPDF();
+    });
+
+    doc.save('polyfit_rapport.pdf');
+    showToast('Génération du PDF réussie', 'success');
 }
+
 
 // Fonction pour afficher un toast de notification
 function showToast(message, type = 'info') {
