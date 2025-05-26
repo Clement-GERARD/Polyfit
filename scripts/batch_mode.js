@@ -741,7 +741,7 @@ function exportBatchToPDF() {
                 await processIndividualFile(i);
             }
             
-            const result = batchResults.find(r => r.filename === file.name);
+            const result = allResults.find(r => r.filename === file.name);
             if (!result) continue;
             console.log(result);
 
