@@ -325,61 +325,53 @@ function toggleBatchMode() {
     const wasActive = batchModeActive;
     batchModeActive = !batchModeActive;
 
+    // Réinitialisation globale des résultats
+    if (batchModeActive) {
+        allResults = [];
+    }
+
     // Mettre à jour l'affichage du conteneur de fichiers batch
     const batchFilesContainer = document.getElementById('batch-files-container');
 
     if (batchModeActive) {
         document.body.classList.add('batch-mode-active');
 
-        // Afficher le conteneur s'il y a des fichiers
         if (batchFiles.length > 0) {
             batchFilesContainer.classList.remove('hidden');
         }
 
-        // Modifier le comportement du sélecteur de fichier
         const fileInput = document.getElementById('file-input');
         if (fileInput) {
             fileInput.multiple = true;
 
-            // Sauvegarder le gestionnaire d'événements original
             if (!fileInput._originalOnChange) {
                 fileInput._originalOnChange = fileInput.onchange;
             }
 
-            // Remplacer par notre gestionnaire pour le mode batch
             fileInput.onchange = handleBatchFiles;
         }
 
-        // Activer le mode comparaison
         document.body.classList.add('comparison-mode-active');
     } else {
-        // Reset complet du mode batch
         document.body.classList.remove('batch-mode-active');
         batchFilesContainer.classList.add('hidden');
 
-        // Restaurer le comportement original du sélecteur de fichier
         const fileInput = document.getElementById('file-input');
         if (fileInput) {
             fileInput.multiple = false;
 
-            // Restaurer le gestionnaire d'événements original
             if (fileInput._originalOnChange) {
                 fileInput.onchange = fileInput._originalOnChange;
-            }
-            // Si aucun gestionnaire original, on remet handleFiles
-            else {
+            } else {
                 fileInput.onchange = (event) => handleFiles(event);
             }
         }
 
-        // Désactiver le mode comparaison
         document.body.classList.remove('comparison-mode-active');
 
-        // Réinitialiser l'interface et les données
         resetBatchMode();
     }
 
-    // Mettre à jour le statut
     if (batchModeActive) {
         showToast('Mode batch activé', 'info');
     } else {
@@ -749,136 +741,62 @@ function exportBatchToPDF() {
     
     // Fonction pour ajouter une page par fichier
     async function addFilePages() {
-        for (let i = 0; i < batchFiles.length; i++) {
-            const file = batchFiles[i];
-            
-            // Ajouter une nouvelle page
-            doc.addPage();
-            
-            // Titre de la page
-            doc.setFontSize(titleFontSize);
-            doc.setFont('helvetica', 'bold');
-            doc.text(`Fichier: ${file.name}`, pageWidth / 2, margin, { align: 'center' });
-            
-            let yPosition = margin + 15;
-            
-            // Ajouter les résultats pour ce fichier
-            doc.setFontSize(subtitleFontSize);
-            doc.text('Résultats par méthode', margin, yPosition);
-            yPosition += 10;
-            
-            // Tableau des paramètres
-            const paramData = [];
-            const paramColumns = [
-                { header: 'Méthode', dataKey: 'method' },
-                { header: 'J0', dataKey: 'j0' },
-                { header: 'Jph', dataKey: 'jph' },
-                { header: 'Rs', dataKey: 'rs' },
-                { header: 'Rsh', dataKey: 'rsh' },
-                { header: 'n', dataKey: 'n' },
-                { header: 'SSD', dataKey: 'ssd' }
-            ];
-            
-            // Chercher les résultats pour ce fichier
-            const fileResult = batchResults.find(result => result.filename === file.name);
-            
-            if (fileResult) {
-                // Remplir les données du tableau
-                for (const [methodKey, methodParams] of Object.entries(fileResult.methods)) {
-                    paramData.push({
-                        method: methodToName(methodKey),
-                        j0: methodParams.J0 || '-',
-                        jph: methodParams.Jph || '-',
-                        rs: methodParams.Rs || '-',
-                        rsh: methodParams.Rsh || '-',
-                        n: methodParams.n || '-',
-                        ssd: methodParams.SSD || '-'
-                    });
-                }
-            }
-            
-            // Ajouter le tableau au PDF
-            doc.autoTable({
-                startY: yPosition,
-                head: [paramColumns.map(col => col.header)],
-                body: paramData.map(row => paramColumns.map(col => row[col.dataKey])),
-                margin: { top: margin, right: margin, bottom: margin, left: margin },
-                styles: { fontSize: smallFontSize },
-                headStyles: { fillColor: [4, 84, 117], textColor: [255, 255, 255] },
-                alternateRowStyles: { fillColor: [240, 240, 240] },
-                tableWidth: 'auto'
-            });
-            
-            // Mettre à jour la position Y après le tableau
-            yPosition = doc.lastAutoTable.finalY + 15;
-            
-            // Ajouter le graphique de la courbe générale si disponible
-            if (fileResult && fileResult.curve_image_all) {
-                doc.setFontSize(subtitleFontSize);
-                doc.text('Courbe générale', margin, yPosition);
-                yPosition += 10;
-                
-                // Ajouter l'image
-                try {
-                    const imgWidth = contentWidth;
-                    const imgHeight = contentWidth * 0.6;
-                    
-                    doc.addImage(fileResult.curve_image_all, 'PNG', margin, yPosition, imgWidth, imgHeight);
-                } catch (error) {
-                    console.error(`Erreur lors de l'ajout de l'image pour ${file.name}:`, error);
-                    doc.text(`Erreur: Impossible d'ajouter l'image`, margin, yPosition + 10);
-                }
-            }
+    for (let i = 0; i < batchFiles.length; i++) {
+        const file = batchFiles[i];
+
+        // Forcer le traitement si non encore analysé
+        const alreadyProcessed = batchResults.some(r => r.filename === file.name);
+        if (!alreadyProcessed) {
+            await processIndividualFile(i);
         }
-    }
-    
-    // Fonction pour ajouter la page des boîtes à moustaches
-    async function addBoxplotPage() {
-        // Ajouter une nouvelle page
+
+        const result = batchResults.find(r => r.filename === file.name);
+        if (!result) continue;
+
         doc.addPage();
-        
-        // Titre de la page
         doc.setFontSize(titleFontSize);
         doc.setFont('helvetica', 'bold');
-        doc.text('Boîtes à moustaches', pageWidth / 2, margin, { align: 'center' });
-        
-        let yPosition = margin + 15;
-        
-        // Ajouter le graphique des boîtes à moustaches
-        try {
-            // Chercher le conteneur des boîtes à moustaches
-            const boxplotElement = document.querySelector('#boxplot-zone .boxplot-container');
-            
-            if (boxplotElement) {
-                // Capturer le graphique en tant qu'image
-                const canvas = await html2canvas(boxplotElement, {
-                    scale: 2,
-                    logging: false,
-                    useCORS: true
-                });
-                
-                const imgData = canvas.toDataURL('image/png');
-                
-                // Calculer les dimensions de l'image pour qu'elle tienne sur la page
-                const imgWidth = contentWidth;
-                const imgHeight = contentWidth * 0.75;
-                
-                // Ajouter l'image
-                doc.addImage(imgData, 'PNG', margin, yPosition, imgWidth, imgHeight);
-            } else {
-                doc.text('Boîtes à moustaches non disponibles', margin, yPosition);
+        doc.text(`Fichier : ${file.name}`, pageWidth / 2, margin, { align: 'center' });
+
+        let y = margin + 15;
+        const paramKeys = ['J0', 'Jph', 'Rs', 'Rsh', 'n', 'SSD'];
+
+        for (const methodKey of ['random', 'mlp', 'genetique', 'cnn']) {
+            const methodName = methodToName(methodKey);
+            const methodData = result.methods[methodKey];
+
+            if (!methodData) continue;
+
+            doc.setFontSize(subtitleFontSize);
+            doc.text(`Méthode : ${methodName}`, margin, y);
+            y += 8;
+
+            const tableBody = paramKeys.map(key => [key, formatNumber(methodData[key])]);
+
+            doc.autoTable({
+                startY: y,
+                head: [['Paramètre', 'Valeur']],
+                body: tableBody,
+                styles: { fontSize: smallFontSize },
+                headStyles: { fillColor: [4, 84, 117], textColor: [255, 255, 255] },
+                alternateRowStyles: { fillColor: [245, 245, 245] },
+                margin: { left: margin, right: margin },
+                tableWidth: 'auto'
+            });
+
+            y = doc.lastAutoTable.finalY + 10;
+
+            if (y > pageHeight - 50) {
+                doc.addPage();
+                y = margin;}
             }
-        } catch (error) {
-            console.error('Erreur lors de la capture des boîtes à moustaches:', error);
-            doc.text('Erreur lors de la génération des boîtes à moustaches', margin, yPosition);
         }
     }
-    
+
     // Générer le PDF complet
     async function generateFullBatchPDF() {
         try {
             await addFilePages();
-            await addBoxplotPage();
             
             // Sauvegarder le PDF
             doc.save('polyfit_batch_resultats.pdf');
