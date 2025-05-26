@@ -485,55 +485,65 @@ function createPresentationSlides(container) {
             const methodSlide = createPresentationSlide(`Méthode: ${method.name}`);
             const methodContent = document.createElement('div');
             methodContent.className = 'presentation-slide-content';
-            
+
             const methodCard = document.createElement('div');
             methodCard.className = 'presentation-method-card';
-            
+
             const methodTitle = document.createElement('h3');
             methodTitle.className = 'presentation-method-title';
             methodTitle.textContent = method.name;
-            
-            const methodParams = document.createElement('div');
-            methodParams.className = 'presentation-method-params';
-            
-            // Ajouter les paramètres
-            const params = currentResult.methods[method.key];
-            for (const [paramKey, paramValue] of Object.entries(params)) {
-                const paramItem = document.createElement('div');
-                paramItem.className = 'presentation-param-item';
-                
-                const paramLabel = document.createElement('div');
-                paramLabel.className = 'presentation-param-label';
-                paramLabel.textContent = paramKey;
-                
-                const paramValueElem = document.createElement('div');
-                paramValueElem.className = 'presentation-param-value';
-                paramValueElem.textContent = formatNumber(paramValue);
-                
-                paramItem.appendChild(paramLabel);
-                paramItem.appendChild(paramValueElem);
-                methodParams.appendChild(paramItem);
-            }
-            
+
+            // **NEW STRUCTURE: Flex container for image and params**
+            const imageAndParamsContainer = document.createElement('div');
+            imageAndParamsContainer.style.display = 'flex';
+            imageAndParamsContainer.style.gap = '20px'; // Space between image and params
+            imageAndParamsContainer.style.alignItems = 'center'; // Vertical alignment
+
             // Ajouter la courbe isolée
             const methodChartContainer = document.createElement('div');
             methodChartContainer.className = 'presentation-method-chart';
-            
+
             // Cloner la courbe de la méthode
             const methodCurveElement = document.querySelector(`#${method.key}-method .curve-image`);
             if (currentResult.images && currentResult.images[method.key]) {
                 const methodImage = document.createElement('img');
                 methodImage.src = 'data:image/png;base64,' + currentResult.images[method.key];
                 methodImage.style.objectFit = 'contain';
+                methodImage.style.width = '50%'; // Adjust as needed
                 methodChartContainer.appendChild(methodImage);
             } else {
                 methodChartContainer.innerHTML = '<p>Courbe non disponible</p>';
             }
-            
+
+            imageAndParamsContainer.appendChild(methodChartContainer);
+
+            const methodParams = document.createElement('div');
+            methodParams.className = 'presentation-method-params';
+            methodParams.style.flex = '1'; // Take remaining space
+
+            // Ajouter les paramètres
+            const params = currentResult.methods[method.key];
+            for (const [paramKey, paramValue] of Object.entries(params)) {
+                const paramItem = document.createElement('div');
+                paramItem.className = 'presentation-param-item';
+
+                const paramLabel = document.createElement('div');
+                paramLabel.className = 'presentation-param-label';
+                paramLabel.textContent = paramKey;
+
+                const paramValueElem = document.createElement('div');
+                paramValueElem.className = 'presentation-param-value';
+                paramValueElem.textContent = formatNumber(paramValue);
+
+                paramItem.appendChild(paramLabel);
+                paramItem.appendChild(paramValueElem);
+                methodParams.appendChild(paramItem);
+            }
+            imageAndParamsContainer.appendChild(methodParams);
+
             methodCard.appendChild(methodTitle);
-            methodCard.appendChild(methodParams);
-            methodCard.appendChild(methodChartContainer);
-            
+            methodCard.appendChild(imageAndParamsContainer); // Use the flex container
+
             methodContent.appendChild(methodCard);
             methodSlide.appendChild(methodContent);
         }
