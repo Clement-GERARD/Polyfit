@@ -205,6 +205,9 @@ function generatePDF() {
     const margin = 15;
     const contentWidth = pageWidth - 2 * margin;
 
+    const lastResult = allResults[allResults.length - 1];
+    const filename = lastResult.filename;
+
     // --- Page de garde ---
     doc.setFontSize(titleFontSize);
     doc.setFont('helvetica', 'bold');
@@ -216,33 +219,25 @@ function generatePDF() {
     const dateStr = today.toLocaleDateString();
     doc.text(`Date: ${dateStr}`, pageWidth - margin, margin + 10, { align: 'right' });
 
-    // Liste des fichiers
+    // Fichier analysé
     doc.setFontSize(subtitleFontSize);
     doc.setFont('helvetica', 'bold');
-    doc.text('Fichiers analysés', margin, margin + 25);
+    doc.text('Fichier analysé', margin, margin + 25);
 
     doc.setFontSize(normalFontSize);
     doc.setFont('helvetica', 'normal');
-    const fileNames = [...new Set(allResults.map(result => result.filename))];
-    let y = margin + 33;
-    fileNames.forEach(filename => {
-        doc.text(`• ${filename}`, margin + 5, y);
-        y += 6;
-        if (y > pageHeight - margin) {
-            doc.addPage();
-            y = margin;
-        }
-    });
+    doc.text(`• ${filename}`, margin + 5, margin + 33);
 
-    // Image curve_image_all (uniquement une fois, prise sur le premier élément qui l’a)
-    const allImg = allResults.find(r => r.images?.all)?.images?.all;
+    // Image curve_image_all (si présente)
+    const allImg = lastResult.images?.all;
     if (allImg) {
         const imgHeight = contentWidth * 0.75;
-        if (y + imgHeight > pageHeight - margin) {
+        let yImg = margin + 40;
+        if (yImg + imgHeight > pageHeight - margin) {
             doc.addPage();
-            y = margin;
+            yImg = margin;
         }
-        doc.addImage(allImg, 'PNG', margin, y + 10, contentWidth, imgHeight);
+        doc.addImage(allImg, 'PNG', margin, yImg, contentWidth, imgHeight);
     }
 
     // --- Pages par méthode ---
@@ -254,73 +249,62 @@ function generatePDF() {
     ];
 
     methodList.forEach(({ key, name }) => {
-        // Extraire les lignes de résultats existants
-        const rows = allResults
-            .filter(r => r.methods[key])
-            .map(r => ({
-                filename: r.filename,
-                j0: r.methods[key].J0,
-                jph: r.methods[key].Jph,
-                rs: r.methods[key].Rs,
-                rsh: r.methods[key].Rsh,
-                n: r.methods[key].n,
-                ssd: r.methods[key].SSD,
-                img: r.images?.[key] || null
-            }));
-
-        if (rows.length === 0) return;
+        const method = lastResult.methods[key];
+        if (!method) return;
 
         doc.addPage();
+
+        // Titre méthode
         doc.setFontSize(titleFontSize);
         doc.setFont('helvetica', 'bold');
         doc.text(`Méthode : ${name}`, pageWidth / 2, margin, { align: 'center' });
 
-        // Paramètres
+        // Tableau de paramètres transposé
         doc.setFontSize(subtitleFontSize);
-        doc.text('Paramètres prédits', margin, margin + 15);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Paramètres prédits', margin, margin + 20);
+
+        const paramData = [
+            ['J0', format(method.J0)],
+            ['Jph', format(method.Jph)],
+            ['Rs', format(method.Rs)],
+            ['Rsh', format(method.Rsh)],
+            ['n', format(method.n)],
+            ['SSD', format(method.SSD)]
+        ];
 
         doc.autoTable({
-            startY: margin + 22,
-            head: [[ 'Fichier', 'J0', 'Jph', 'Rs', 'Rsh', 'n', 'SSD' ]],
-            body: rows.map(r => [
-                r.filename,
-                r.j0?.toExponential?.(2) ?? '',
-                r.jph?.toFixed?.(3) ?? '',
-                r.rs?.toFixed?.(3) ?? '',
-                r.rsh?.toFixed?.(3) ?? '',
-                r.n?.toFixed?.(3) ?? '',
-                r.ssd?.toExponential?.(2) ?? ''
-            ]),
+            startY: margin + 27,
+            head: [['Paramètre', 'Valeur']],
+            body: paramData,
+            margin: { top: margin, left: margin, right: margin },
             styles: { fontSize: smallFontSize },
             headStyles: { fillColor: [4, 84, 117], textColor: [255, 255, 255] },
             alternateRowStyles: { fillColor: [240, 240, 240] },
-            margin: { left: margin, right: margin }
+            tableWidth: 'auto'
         });
 
-        // Position après le tableau
-        let yImg = doc.lastAutoTable.finalY + 10;
+        // Image associée
+        let yAfterTable = doc.lastAutoTable.finalY + 10;
+        const curveImg = lastResult.images?.[key];
+        if (curveImg) {
+            doc.setFontSize(subtitleFontSize);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Courbe associée', margin, yAfterTable);
+            yAfterTable += 5;
 
-        doc.setFontSize(subtitleFontSize);
-        doc.setFont('helvetica', 'bold');
-        doc.text('Courbe associée', margin, yImg);
-        yImg += 5;
-
-        // Affiche la première image disponible
-        const firstImage = rows.find(r => r.img)?.img;
-        if (firstImage) {
             const imgHeight = contentWidth * 0.6;
-            if (yImg + imgHeight > pageHeight - margin) {
+            if (yAfterTable + imgHeight > pageHeight - margin) {
                 doc.addPage();
-                yImg = margin;
+                yAfterTable = margin;
             }
-            doc.addImage(firstImage, 'PNG', margin, yImg, contentWidth, imgHeight);
+            doc.addImage(curveImg, 'PNG', margin, yAfterTable, contentWidth, imgHeight);
         }
     });
 
     doc.save('polyfit_rapport.pdf');
     showToast('Génération du PDF réussie', 'success');
 }
-
 
 // Fonction pour afficher un toast de notification
 function showToast(message, type = 'info') {
