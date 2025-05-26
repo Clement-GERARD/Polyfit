@@ -730,6 +730,7 @@ function exportBatchToPDF() {
     });
 
     async function addFilePages() {
+        console.log('→ addFilePages() appelée');
         for (let i = 0; i < batchFiles.length; i++) {
             const file = batchFiles[i];
             console.log(file)
@@ -745,6 +746,7 @@ function exportBatchToPDF() {
             console.log(result);
 
             doc.addPage();
+            console.log(`→ Ajout page pour ${file.name}`);
             doc.setFontSize(titleFontSize);
             doc.setFont('helvetica', 'bold');
             doc.text(`Fichier : ${file.name}`, pageWidth / 2, margin, { align: 'center' });
@@ -785,7 +787,7 @@ function exportBatchToPDF() {
 
     async function generateFullBatchPDF() {
         try {
-            await addFilePages();  // ✅ attendre la fin des pages
+            await addFilePages();  // ⚠️ obligatoire
             doc.save('polyfit_batch_resultats.pdf');
             showToast('Export PDF batch réussi', 'success');
         } catch (error) {
