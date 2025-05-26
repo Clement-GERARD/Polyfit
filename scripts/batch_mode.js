@@ -327,7 +327,7 @@ function toggleBatchMode() {
 
     // Réinitialisation globale des résultats
     if (batchModeActive) {
-        allResults = [];
+        allResults.length = 0;
     }
 
     // Mettre à jour l'affichage du conteneur de fichiers batch
