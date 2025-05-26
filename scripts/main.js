@@ -409,32 +409,52 @@ async function uploadFile(file) {
 }
 
 function storeResults(data) {
-    // Créer un objet résultat avec les données actuelles
     const result = {
         filename: currentFileName,
-        methods: {}
+        methods: {},
+        images : {}
     };
-    
+
     // Ajouter les résultats de chaque méthode
     if (data.params_mlp) {
         result.methods.mlp = data.params_mlp;
     }
-    
+
     if (data.params_cnn) {
         result.methods.cnn = data.params_cnn;
     }
-    
+
     if (data.params_genetique) {
         result.methods.gen = data.params_genetique;
     }
-    
+
     if (data.params_random) {
         result.methods.rand = data.params_random;
     }
-    
-    // Ajouter au tableau des résultats
+
+    if (data.curve_image_mlp) {
+        result.images.mlp = data.curve_image_mlp;
+    }
+
+    if (data.curve_image_cnn) {
+        result.images.cnn = data.curve_image_cnn;
+    }
+
+    if (data.curve_image_gen) {
+        result.images.gen = data.curve_image_gen;
+    }
+
+    if (data.curve_image_rand) {
+        result.images.rand = data.curve_image_rand;
+    }
+
+    if (data.curve_image_all) {
+        result.images.all = data.curve_image_all;
+    }
+
     allResults.push(result);
 }
+
 
 function updateComparisonTable(data) {
     // Méthode MLP
