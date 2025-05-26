@@ -556,27 +556,28 @@ function createPresentationSlides(container) {
     
     tableSlide.appendChild(tableContent);
     
-    // Diapositive: Boîtes à moustaches
-    const boxplotSlide = createPresentationSlide('Boîtes à moustaches');
-    const boxplotContent = document.createElement('div');
-    boxplotContent.className = 'presentation-slide-content';
+    // Diapositives: Boîtes à moustaches (1 par paramètre)
+    const parameters = ['J0', 'Jph', 'Rs', 'Rsh', 'n'];
     
-    const boxplotContainer = document.createElement('div');
-    boxplotContainer.className = 'presentation-chart-container';
+    parameters.forEach(paramKey => {
+        const boxplotSlide = createPresentationSlide(`Distribution de ${paramKey}`);
+        const boxplotContent = document.createElement('div');
+        boxplotContent.className = 'presentation-slide-content';
     
-    // Cloner les boîtes à moustaches
-    const boxplotElement = document.querySelector('#boxplot-zone .boxplot-container');
-    if (boxplotElement) {
-        const boxplotClone = boxplotElement.cloneNode(true);
-        boxplotClone.style.width = '100%';
-        boxplotClone.style.height = '100%';
-        boxplotContainer.appendChild(boxplotClone);
-    } else {
-        boxplotContainer.innerHTML = '<p>Boîtes à moustaches non disponibles</p>';
-    }
+        const boxplotContainer = document.createElement('div');
+        boxplotContainer.className = 'presentation-chart-container';
     
-    boxplotContent.appendChild(boxplotContainer);
-    boxplotSlide.appendChild(boxplotContent);
+        const canvas = document.createElement('canvas');
+        canvas.id = `${paramKey}-boxplot-canvas`;
+        canvas.className = 'presentation-chart';
+        canvas.style.maxWidth = '100%';
+        canvas.style.maxHeight = '80%';
+        boxplotContainer.appendChild(canvas);
+    
+        boxplotContent.appendChild(boxplotContainer);
+        boxplotSlide.appendChild(boxplotContent);
+    });
+
     
     // Activer la première diapositive
     if (presentationMode.slides.length > 0) {
