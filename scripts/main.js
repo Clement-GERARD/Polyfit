@@ -685,7 +685,6 @@ function openDetailsModal(method) {
     const curveImageContainer = document.getElementById('curve-image-container');
     const ssdValue = document.getElementById('ssd-value');
     const title = document.getElementById('modal-title');
-    const errorBarChartContainer = document.getElementById('error-bar-chart-container'); // Conteneur pour les graphiques de barres d'erreur
 
     // Rechercher les détails correspondants dans allResults
     const details = allResults.find(result => result.methods[method] !== undefined);
@@ -697,38 +696,36 @@ function openDetailsModal(method) {
         distributionZone.innerHTML = "<p>Aucune donnée de paramètres disponible pour cette méthode.</p>";
         curveImageContainer.innerHTML = "";
         ssdValue.innerHTML = "";
-        errorBarChartContainer.innerHTML = ""; // Effacer les anciens graphiques
+        // On ne touche pas à distributionZone car on va y mettre les graphiques
     } else {
         title.textContent = `Détails – ${methodToName(method)}`;
 
         const params = details.methods[method];
         const errors = details.errors ? details.errors[method] : null;
 
-        // Afficher les paramètres sous forme de tableau
-        let paramsHTML = '<table class="params-table">';
-        paramsHTML += '<tr><th>Paramètre</th><th>Valeur</th></tr>';
-        for (const paramName in params) {
-            if (params.hasOwnProperty(paramName)) {
-                paramsHTML += `<tr><td>${paramName}</td><td>${params[paramName]}</td></tr>`;
-            }
-        }
-        paramsHTML += '</table>';
-        distributionZone.innerHTML = paramsHTML;
+        distributionZone.innerHTML = ''; // Effacer le contenu précédent de la zone de distribution
 
-        // Créer et afficher les graphiques de barres d'erreur
-        errorBarChartContainer.innerHTML = ''; // Effacer les anciens graphiques
         if (errors) {
+            // Créer un conteneur flex pour aligner les graphiques horizontalement
+            const chartContainer = document.createElement('div');
+            chartContainer.style.display = 'flex';
+            chartContainer.style.flexWrap = 'wrap'; // Permettre le retour à la ligne si nécessaire
+            distributionZone.appendChild(chartContainer);
+
             for (const paramName in errors) {
                 if (errors.hasOwnProperty(paramName) && errors[paramName].min !== undefined && errors[paramName].max !== undefined && errors[paramName].central !== undefined) {
-                    const canvasId = `error-bar-canvas-${method}-${paramName}`;
-                    errorBarChartContainer.innerHTML += `<canvas id="${canvasId}" width="200" height="150" style="margin-right: 10px;"></canvas>`;
-                    const canvas = document.getElementById(canvasId);
+                    const canvas = document.createElement('canvas');
+                    canvas.id = `error-bar-canvas-${method}-${paramName}`;
+                    canvas.width = 200;
+                    canvas.height = 150;
+                    canvas.style.marginRight = '10px';
+                    chartContainer.appendChild(canvas);
                     const ctx = canvas.getContext('2d');
                     plotErrorBarChart(ctx, paramName, errors[paramName].min, errors[paramName].max, errors[paramName].central);
                 }
             }
         } else {
-            errorBarChartContainer.innerHTML = "<p>Barres d'erreur non disponibles pour cette méthode.</p>";
+            distributionZone.innerHTML = "<p>Barres d'erreur non disponibles pour cette méthode.</p>";
         }
 
         // Afficher l'image si disponible
