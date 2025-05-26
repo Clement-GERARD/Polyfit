@@ -562,6 +562,7 @@ async function processIndividualFile(index) {
 
         // Vérifier si l'analyse a réussi
         if (result.success) {
+            result.data.filename = file.name;
 
             storeResults(result.data)
             
