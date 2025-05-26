@@ -461,6 +461,8 @@ function createPresentationSlides(container) {
     if (currentResult.images && currentResult.images.all) {
         const curveImage = document.createElement('img');
         curveImage.src = 'data:image/png;base64,' + currentResult.images.all;
+        curveImage.style.objectFit = 'contain';
+        
         curveImage.className = 'presentation-chart';
         curveContainer.appendChild(curveImage);
     } else {
@@ -522,8 +524,7 @@ function createPresentationSlides(container) {
             if (currentResult.images && currentResult.images[method.key]) {
                 const methodImage = document.createElement('img');
                 methodImage.src = 'data:image/png;base64,' + currentResult.images[method.key];
-                methodImage.style.width = '100%';
-                methodImage.style.height = '100%';
+                methodImage.style.objectFit = 'contain';
                 methodChartContainer.appendChild(methodImage);
             } else {
                 methodChartContainer.innerHTML = '<p>Courbe non disponible</p>';
