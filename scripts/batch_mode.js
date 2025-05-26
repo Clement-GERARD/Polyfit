@@ -675,141 +675,122 @@ function updateAllBatchFileStatuses(status) {
     });
 }
 
-// Fonction pour exporter les résultats batch en PDF
 function exportBatchToPDF() {
     if (batchFiles.length === 0) {
         showToast('Aucun fichier à exporter', 'error');
         return;
     }
-    
-    // Afficher un message de chargement
+
     showToast('Génération du PDF en cours...', 'info');
-    
-    // Utiliser la bibliothèque jsPDF
+
     const { jsPDF } = window.jspdf;
-    
-    // Créer un nouveau document PDF
     const doc = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
         format: 'a4'
     });
-    
-    // Définir les styles
+
     const titleFontSize = 16;
     const subtitleFontSize = 14;
     const normalFontSize = 11;
     const smallFontSize = 9;
-    
+
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
     const margin = 15;
     const contentWidth = pageWidth - 2 * margin;
-    
-    // Ajouter un titre
+
     doc.setFontSize(titleFontSize);
     doc.setFont('helvetica', 'bold');
     doc.text('Rapport d\'analyse Polyfit AI - Batch', pageWidth / 2, margin, { align: 'center' });
-    
-    // Ajouter la date
+
     doc.setFontSize(normalFontSize);
     doc.setFont('helvetica', 'normal');
-    const today = new Date();
-    const dateStr = today.toLocaleDateString();
+    const dateStr = new Date().toLocaleDateString();
     doc.text(`Date: ${dateStr}`, pageWidth - margin, margin, { align: 'right' });
-    
-    // Ajouter la liste des fichiers
+
     let yPosition = margin + 20;
     doc.setFontSize(subtitleFontSize);
     doc.setFont('helvetica', 'bold');
     doc.text('Fichiers analysés', margin, yPosition);
-    
+
     yPosition += 8;
     doc.setFontSize(normalFontSize);
     doc.setFont('helvetica', 'normal');
-    
+
     batchFiles.forEach((file, index) => {
         doc.text(`${index + 1}. ${file.name}`, margin, yPosition);
         yPosition += 6;
-        
-        // Ajouter une nouvelle page si nécessaire
         if (yPosition > pageHeight - margin) {
             doc.addPage();
             yPosition = margin;
         }
     });
-    
-    // Fonction pour ajouter une page par fichier
+
     async function addFilePages() {
-    for (let i = 0; i < batchFiles.length; i++) {
-        const file = batchFiles[i];
+        for (let i = 0; i < batchFiles.length; i++) {
+            const file = batchFiles[i];
 
-        // Forcer le traitement si non encore analysé
-        const alreadyProcessed = batchResults.some(r => r.filename === file.name);
-        if (!alreadyProcessed) {
-            await processIndividualFile(i);
-        }
+            // Forcer traitement si non encore analysé
+            const alreadyProcessed = batchResults.some(r => r.filename === file.name);
+            if (!alreadyProcessed) {
+                await processIndividualFile(i);
+            }
 
-        const result = batchResults.find(r => r.filename === file.name);
-        if (!result) continue;
+            const result = batchResults.find(r => r.filename === file.name);
+            if (!result) continue;
 
-        doc.addPage();
-        doc.setFontSize(titleFontSize);
-        doc.setFont('helvetica', 'bold');
-        doc.text(`Fichier : ${file.name}`, pageWidth / 2, margin, { align: 'center' });
+            doc.addPage();
+            doc.setFontSize(titleFontSize);
+            doc.setFont('helvetica', 'bold');
+            doc.text(`Fichier : ${file.name}`, pageWidth / 2, margin, { align: 'center' });
 
-        let y = margin + 15;
-        const paramKeys = ['J0', 'Jph', 'Rs', 'Rsh', 'n', 'SSD'];
+            let y = margin + 15;
+            const paramKeys = ['J0', 'Jph', 'Rs', 'Rsh', 'n', 'SSD'];
 
-        for (const methodKey of ['random', 'mlp', 'genetique', 'cnn']) {
-            const methodName = methodToName(methodKey);
-            const methodData = result.methods[methodKey];
+            for (const methodKey of ['random', 'mlp', 'genetique', 'cnn']) {
+                const methodName = methodToName(methodKey);
+                const methodData = result.methods[methodKey];
+                if (!methodData) continue;
 
-            if (!methodData) continue;
+                doc.setFontSize(subtitleFontSize);
+                doc.text(`Méthode : ${methodName}`, margin, y);
+                y += 8;
 
-            doc.setFontSize(subtitleFontSize);
-            doc.text(`Méthode : ${methodName}`, margin, y);
-            y += 8;
+                const tableBody = paramKeys.map(key => [key, formatNumber(methodData[key])]);
 
-            const tableBody = paramKeys.map(key => [key, formatNumber(methodData[key])]);
+                doc.autoTable({
+                    startY: y,
+                    head: [['Paramètre', 'Valeur']],
+                    body: tableBody,
+                    styles: { fontSize: smallFontSize },
+                    headStyles: { fillColor: [4, 84, 117], textColor: [255, 255, 255] },
+                    alternateRowStyles: { fillColor: [245, 245, 245] },
+                    margin: { left: margin, right: margin },
+                    tableWidth: 'auto'
+                });
 
-            doc.autoTable({
-                startY: y,
-                head: [['Paramètre', 'Valeur']],
-                body: tableBody,
-                styles: { fontSize: smallFontSize },
-                headStyles: { fillColor: [4, 84, 117], textColor: [255, 255, 255] },
-                alternateRowStyles: { fillColor: [245, 245, 245] },
-                margin: { left: margin, right: margin },
-                tableWidth: 'auto'
-            });
-
-            y = doc.lastAutoTable.finalY + 10;
-
-            if (y > pageHeight - 50) {
-                doc.addPage();
-                y = margin;}
+                y = doc.lastAutoTable.finalY + 10;
+                if (y > pageHeight - 50) {
+                    doc.addPage();
+                    y = margin;
+                }
             }
         }
     }
 
-    // Générer le PDF complet
     async function generateFullBatchPDF() {
         try {
-            await addFilePages();
-            
-            // Sauvegarder le PDF
+            await addFilePages();  // ✅ attendre la fin des pages
             doc.save('polyfit_batch_resultats.pdf');
-            
             showToast('Export PDF batch réussi', 'success');
         } catch (error) {
             console.error('Erreur lors de la génération du PDF batch:', error);
             showToast('Erreur lors de la génération du PDF batch', 'error');
         }
     }
-    
-    // Lancer la génération
-    generateFullBatchPDF();
+
+    generateFullBatchPDF();  // ✅ exécution finale
 }
 
 // Fonction pour convertir la clé de méthode en nom lisible
