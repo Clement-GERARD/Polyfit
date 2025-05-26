@@ -564,7 +564,7 @@ async function processIndividualFile(index) {
         // Vérifier si l'analyse a réussi
         if (result.success) {
             result.data.filename = file.name;
-            console.log(result);
+            currentFileName = result.data.filename;
             storeResults(result.data)
             
             // Afficher les résultats (comme uploadFile)
