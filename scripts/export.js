@@ -265,12 +265,12 @@ function generatePDF() {
         doc.text('Paramètres prédits', margin, margin + 20);
 
         const paramData = [
-            ['J0', format(method.J0)],
-            ['Jph', format(method.Jph)],
-            ['Rs', format(method.Rs)],
-            ['Rsh', format(method.Rsh)],
-            ['n', format(method.n)],
-            ['SSD', format(method.SSD)]
+            ['J0', method.J0],
+            ['Jph', method.Jph],
+            ['Rs', method.Rs],
+            ['Rsh', method.Rsh],
+            ['n', method.n],
+            ['SSD', method.SSD]
         ];
 
         doc.autoTable({
