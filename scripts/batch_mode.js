@@ -552,6 +552,7 @@ async function processIndividualFile(index) {
     }
 
     const file = batchFiles[index];
+    console.log(file);
 
     // Mettre à jour le statut du fichier
     updateBatchFileStatus(index, 'processing');
@@ -563,7 +564,7 @@ async function processIndividualFile(index) {
         // Vérifier si l'analyse a réussi
         if (result.success) {
             result.data.filename = file.name;
-
+            console.log(result);
             storeResults(result.data)
             
             // Afficher les résultats (comme uploadFile)
