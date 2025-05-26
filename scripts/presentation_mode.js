@@ -489,10 +489,6 @@ function createPresentationSlides(container) {
             const methodCard = document.createElement('div');
             methodCard.className = 'presentation-method-card';
 
-            const methodTitle = document.createElement('h3');
-            methodTitle.className = 'presentation-method-title';
-            methodTitle.textContent = method.name;
-
             // **NEW STRUCTURE: Flex container for image and params**
             const imageAndParamsContainer = document.createElement('div');
             imageAndParamsContainer.style.display = 'flex';
@@ -700,12 +696,6 @@ function initializeSlideCharts(slideIndex) {
     }
     
     // Autres initialisations de graphiques si nécessaire
-}
-
-// Fonction pour créer un graphique radar
-function createRadarChart(canvas) {
-    // Cette fonction dépend de la structure des données et des bibliothèques de graphiques utilisées
-    // Implémentation à adapter selon les besoins
 }
 
 // Fonction pour quitter le mode présentation
