@@ -739,6 +739,7 @@ function openDetailsModal(method) {
 }
 
 function plotErrorBars(method, statsData) {
+    console.log(method, statsData);
     const ctx = document.getElementById('error-bar-chart').getContext('2d');
     if (!statsData || !statsData.means) return;
 
