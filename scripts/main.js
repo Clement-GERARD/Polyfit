@@ -67,10 +67,10 @@ function createAllBoxplots() {
         return;
     }
 
-    // Utiliser toujours les résultats du premier fichier
-    const singleFileResult = allResults[0]; 
+    // Utiliser toujours les résultats du dernier fichier
+    const singleFileResult = allResults[allResults.length - 1]; // Changement ici pour utiliser le dernier élément
     if (!singleFileResult || !singleFileResult.methods) {
-        updatePlaceholder("#boxplot-zone", "Structure de données invalide dans allResults[0].");
+        updatePlaceholder("#boxplot-zone", "Structure de données invalide dans le dernier élément de allResults.");
         console.log("Arrêt de BoxPlots: Structure de données invalide.");
         return;
     }
