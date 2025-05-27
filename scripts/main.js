@@ -700,10 +700,12 @@ function openDetailsModal(method) {
         // Append the table to the distributionZone first
         distributionZone.innerHTML = paramsHTML;
 
-        // --- VERTICAL ERROR BAR CHART (Point with uncertainty bars) ---
-        const canvas = document.getElementById('error-bar-chart');
-        const ctx = canvas ? canvas.getContext('2d') : null;
-        console.log(details.error, ctx);
+        const canvas = document.createElement('canvas');
+        canvas.id = 'error-bar-chart';
+        canvas.style.maxHeight = '300px';
+        distributionZone.appendChild(canvas);
+        
+        const ctx = canvas.getContext('2d');
         
         if (details.error && ctx) {
             canvas.style.display = 'block'; // Ensure canvas is visible
