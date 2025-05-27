@@ -743,155 +743,170 @@ function openDetailsModal(method) {
     modal.classList.remove("hidden");
 }
 
-function plotErrorBarsIndividual(method, statsData, paramToPlot, ctx) {
-  console.log(`Plotting ${paramToPlot} for ${method}`, statsData);
-  if (!statsData || !statsData[paramToPlot]) return;
+function openDetailsModal(method) {
+    const modal = document.getElementById('details-modal');
+    const distributionZone = document.getElementById('distribution-zone');
+    const curveImageContainer = document.getElementById('curve-image-container');
+    const ssdValue = document.getElementById('ssd-value');
+    const title = document.getElementById('modal-title');
 
-  const labels = [paramToPlot];
+    // Rechercher les détails correspondants dans allResults
+    const details = allResults.find(result => result.methods[method] !== undefined);
 
-  const mins = { [paramToPlot]: statsData[paramToPlot].min };
-  const maxs = { [paramToPlot]: statsData[paramToPlot].max };
-  // Access the predicted value from resultDetails
-  const predictedValue = resultDetails[method].params[paramToPlot];
+    console.log("Résultat avant modale :", details);
 
-  // Prepare data for vertical error bars and the predicted point
-  const dataPoints = labels.map(param => ({
-   x: param, // Parameter name on X-axis
-   yMin: mins[param], // Min value for error bar
-   yMax: maxs[param], // Max value for error bar
-   predicted: predictedValue // Add predicted value
-  }));
+    if (!details || !details.methods || !details.methods[method]) {
+        console.warn("[WARN] Données manquantes pour la méthode :", method, details);
+        distributionZone.innerHTML = "<p>Aucune donnée de paramètres disponible pour cette méthode.</p>";
+        curveImageContainer.innerHTML = "";
+        ssdValue.innerHTML = "";
+        // On ne touche pas à distributionZone car on va y mettre les graphiques
+    } else {
+        title.textContent = `Détails – ${methodToName(method)}`;
 
-  const errorBarData = {
-   labels: labels.flatMap(label => [label, `Prédiction - ${label}`]), // Create two labels per parameter
-   datasets: [
-    {
-     label: `${methodToName(method)} – ${paramToPlot}`,
-     data: dataPoints.map((p, index) => ({ x: labels[index], y: (p.yMin + p.yMax) / 2, yMin: p.yMin, yMax: p.yMax })), // Use original label for error bar
-     borderColor: 'rgb(54, 162, 235)',
-     borderWidth: 1,
-     type: 'line', // Use line type for the error bar
-     showLine: true,
-     pointRadius: 0, // Hide the point for the error bar line
-     errorBarColor: 'rgb(54, 162, 235)', // Custom property for error bar color
-     errorBarLineWidth: 2, // Custom property
-     errorBarWhiskerWidth: 10 // Custom property
-    },
-    {
-     label: `Prédiction – ${paramToPlot}`,
-     data: dataPoints.map((p, index) => ({ x: `Prédiction - ${labels[index]}`, y: p.predicted })), // Use modified label for prediction
-     backgroundColor: 'rgba(255, 99, 132, 0.8)', // Color for the predicted point
-     borderColor: 'rgb(255, 99, 132)',
-     borderWidth: 1,
-     pointRadius: 6,
-     pointBackgroundColor: 'rgb(255, 99, 132)',
-     pointBorderColor: 'rgb(255, 99, 132)',
-     type: 'scatter',
-     showLine: false
-    }
-   ]
-  };
+        const params = details.methods[method];
+        const errors = details.errors ? details.errors[method] : null;
 
-  const config = {
-   type: 'scatter', // Main chart type is scatter to handle the predicted point correctly
-   data: errorBarData,
-   options: {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-     legend: { display: false },
-     tooltip: {
-      enabled: true,
-      callbacks: {
-       label: function(context) {
-        const point = context.raw;
-        if (context.datasetIndex === 0) {
-         return [
-          `Paramètre: ${labels[0]}`,
-          `Min: ${formatFullNumber(point.yMin)}`,
-          `Max: ${formatFullNumber(point.yMax)}`
-         ];
+        distributionZone.innerHTML = ''; // Effacer le contenu précédent de la zone de distribution
+
+        if (errors) {
+            // Créer un conteneur flex pour aligner les graphiques horizontalement
+            const chartContainer = document.createElement('div');
+            chartContainer.style.display = 'flex';
+            chartContainer.style.flexWrap = 'wrap'; // Permettre le retour à la ligne si nécessaire
+            distributionZone.appendChild(chartContainer);
+
+            for (const paramName in errors) {
+                if (errors.hasOwnProperty(paramName) && errors[paramName].min !== undefined && errors[paramName].max !== undefined && errors[paramName].central !== undefined) {
+                    const canvas = document.createElement('canvas');
+                    canvas.id = `error-bar-canvas-${method}-${paramName}`;
+                    canvas.width = 200;
+                    canvas.height = 150;
+                    canvas.style.marginRight = '10px';
+                    chartContainer.appendChild(canvas);
+                    const ctx = canvas.getContext('2d');
+                    plotErrorBarChart(ctx, paramName, errors[paramName].min, errors[paramName].max, errors[paramName].central);
+                }
+            }
         } else {
-         return [`Prédiction: ${formatFullNumber(point.y)}`];
+            distributionZone.innerHTML = "<p>Barres d'erreur non disponibles pour cette méthode.</p>";
         }
-       }
-      }
-     }
-    },
-    scales: {
-     x: {
-      type: 'category', // Use category scale for parameter labels
-      labels: errorBarData.labels, // Use the expanded labels
-      title: { display: true, text: 'Paramètre' },
-      grid: {
-       display: false // Hide vertical grid lines
-      },
-      ticks: {
-       align: 'center',
-       callback: function(value) {
-        return value.split(' - ')[1] ? value.split(' - ')[1] : value; // Display only parameter name or prediction label
-       }
-      }
-     },
-     y: {
-      beginAtZero: false,
-      title: { display: true, text: 'Valeur' },
-      ticks: {
-       callback: function(value) {
-        return formatFullNumber(value); // Use full precision for ticks
-       }
-      },
-      // Adjust the scale to fit the error bars and prediction
-      suggestedMin: Math.min(...dataPoints.map(p => p.yMin), predictedValue),
-      suggestedMax: Math.max(...dataPoints.map(p => p.yMax), predictedValue)
-     }
+
+        // Afficher l'image si disponible
+        const imageName = `curve_image_${method.replace('gen', 'gen')}`; // Ajustement pour 'gen'
+        if (details.images && details.images[imageName]) {
+            curveImageContainer.innerHTML = `<img src="data:image/png;base64,${details.images[imageName]}" alt="Courbe ${methodToName(method)}" style="width:100%; margin-top:15px; border-radius:8px;">`;
+        } else {
+            curveImageContainer.innerHTML = "";
+        }
+
+        // Afficher le SSD si disponible (rechercher la clé ssd correspondante)
+        const ssdKey = `ssd_${method.replace('gen', 'gen')}`; // Ajustement pour 'gen'
+        if (details.hasOwnProperty(ssdKey) && details[ssdKey] !== null && details[ssdKey] !== undefined) {
+            ssdValue.innerHTML = `<div class="ssd-display">SSD: <span class="ssd-value">${details[ssdKey]}</span></div>`;
+        } else {
+            ssdValue.innerHTML = "";
+        }
     }
-   },
-   // Custom plugin to draw error bars if 'chartjs-chart-error-bars' is not used
-   plugins: [{
-    id: 'errorBarsPlugin',
-    afterDatasetsDraw(chart, args, options) {
-     const { ctx, chartArea: { left, right, top, bottom, width, height }, scales: { x, y } } = chart;
 
-     chart.data.datasets.forEach((dataset, datasetIndex) => {
-      if (datasetIndex === 0 && dataset.type === 'line' && dataset.errorBarColor) {
-       ctx.save();
-       ctx.strokeStyle = dataset.errorBarColor;
-       ctx.lineWidth = dataset.errorBarLineWidth || 1;
+    modal.classList.remove("hidden");
+}
 
-       dataset.data.forEach((point, index) => {
-        const xCoord = x.getPixelForValue(point.x); // Get x-coordinate for the error bar
-        const yMin = y.getPixelForValue(point.yMin);
-        const yMax = y.getPixelForValue(point.yMax);
-        const whiskerWidth = dataset.errorBarWhiskerWidth / 2 || 5;
+function plotErrorBarChart(ctx, paramName, minValue, maxValue, centralValue) {
+    const barHeight = 30;
+    const centerLineThickness = 2;
+    const errorBarThickness = 1;
+    const paddingLeft = 50;
+    const paddingBottom = 30;
+    const textOffset = 5;
 
-        // Draw vertical line
-        ctx.beginPath();
-        ctx.moveTo(xCoord, yMin);
-        ctx.lineTo(xCoord, yMax);
-        ctx.stroke();
+    const canvasWidth = ctx.canvas.width;
+    const canvasHeight = ctx.canvas.height;
 
-        // Draw top whisker
-        ctx.beginPath();
-        ctx.moveTo(xCoord - whiskerWidth, yMin);
-        ctx.lineTo(xCoord + whiskerWidth, yMin);
-        ctx.stroke();
+    // Trouver la plage globale pour normaliser les valeurs
+    let minGlobal = Infinity;
+    let maxGlobal = -Infinity;
+    allResults.forEach(result => {
+        const errors = result.errors;
+        if (errors) {
+            for (const methodErrors in errors) {
+                if (errors[methodErrors] && errors[methodErrors][paramName]) {
+                    minGlobal = Math.min(minGlobal, errors[methodErrors][paramName].min);
+                    maxGlobal = Math.max(maxGlobal, errors[methodErrors][paramName].max);
+                }
+            }
+        }
+    });
 
-        // Draw bottom whisker
-        ctx.beginPath();
-        ctx.moveTo(xCoord - whiskerWidth, yMax);
-        ctx.lineTo(xCoord + whiskerWidth, yMax);
-        ctx.stroke();
-       });
-       ctx.restore();
-      }
-     });
+    // Si minGlobal et maxGlobal sont égaux, on ajuste légèrement pour éviter la division par zéro
+    if (minGlobal === maxGlobal) {
+        minGlobal -= Math.abs(centralValue) * 0.1;
+        maxGlobal += Math.abs(centralValue) * 0.1;
+        if (minGlobal === maxGlobal) { // Cas où centralValue est aussi 0
+            minGlobal = -1;
+            maxGlobal = 1;
+        }
     }
-   }]
-  };
 
-  new Chart(ctx, config);
- }
+    const scale = (value) => paddingLeft + (canvasWidth - 2 * paddingLeft) * (value - minGlobal) / (maxGlobal - minGlobal);
+
+    // Dessiner l'axe horizontal
+    ctx.beginPath();
+    ctx.moveTo(paddingLeft, canvasHeight - paddingBottom);
+    ctx.lineTo(canvasWidth - paddingLeft, canvasHeight - paddingBottom);
+    ctx.strokeStyle = 'black';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Dessiner le nom du paramètre sur l'axe Y
+    ctx.fillStyle = 'black';
+    ctx.font = '12px Arial';
+    ctx.textAlign = 'left';
+    ctx.fillText(paramName, 10, canvasHeight / 2);
+
+    // Dessiner la barre d'erreur
+    const yCenter = canvasHeight / 2 - barHeight / 2;
+    const xMin = scale(minValue);
+    const xMax = scale(maxValue);
+    const xCentral = scale(centralValue);
+
+    ctx.beginPath();
+    ctx.moveTo(xMin, yCenter + barHeight / 2);
+    ctx.lineTo(xMax, yCenter + barHeight / 2);
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.lineWidth = errorBarThickness * 2;
+    ctx.stroke();
+
+    // Dessiner la ligne centrale
+    ctx.beginPath();
+    ctx.moveTo(xCentral, yCenter);
+    ctx.lineTo(xCentral, yCenter + barHeight);
+    ctx.strokeStyle = 'blue';
+    ctx.lineWidth = centerLineThickness;
+    ctx.stroke();
+
+    // Afficher la valeur centrale
+    ctx.fillStyle = 'blue';
+    ctx.font = '10px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText(centralValue.toFixed(3), xCentral, yCenter - textOffset);
+}
+
+// Fonction utilitaire pour convertir le nom de la méthode (optionnel)
+function methodToName(method) {
+    switch (method) {
+        case 'mlp':
+            return 'MLP';
+        case 'cnn':
+            return 'CNN';
+        case 'gen':
+            return 'Génétique';
+        case 'rand':
+            return 'Aléatoire';
+        default:
+            return method.toUpperCase();
+    }
+}
 
 // Permettre le traitement batch des fichiers
 function processBatchFiles(files) {
