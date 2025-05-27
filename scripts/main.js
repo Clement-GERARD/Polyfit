@@ -704,7 +704,6 @@ function openDetailsModal(method) {
         if (details.error) {
             const chartContainer = document.createElement('div');
             chartContainer.style.display = 'grid';
-            chartContainer.style.gridTemplateColumns = 'repeat(2, 1fr)'; // Two columns
             chartContainer.style.gap = '10px';
             distributionZone.appendChild(chartContainer);
 
