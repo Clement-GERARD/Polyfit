@@ -741,12 +741,22 @@ function openDetailsModal(method) {
 function plotErrorBars(method, statsData) {
     console.log(method, statsData);
     const ctx = document.getElementById('error-bar-chart').getContext('2d');
-    if (!statsData || !statsData.means) return;
+    if (!statsData) return;
 
-    const labels = ['J0', 'Jph', 'Rs', 'Rsh', 'n'];
-    const means = statsData.means;
-    const mins = statsData.mins;
-    const maxs = statsData.maxs;
+    const labels = ['J0', 'Rs', 'Rsh', 'n'];
+
+    const means = {};
+    const mins = {};
+    const maxs = {};
+    
+    labels.forEach(param => {
+        const entry = statsData[param];
+        if (entry) {
+            means[param] = entry.central;
+            mins[param] = entry.min;
+            maxs[param] = entry.max;
+        }
+    });
 
     // Prepare data for vertical points with error bars
     const dataPoints = labels.map(param => ({
