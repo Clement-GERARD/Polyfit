@@ -703,7 +703,8 @@ function openDetailsModal(method) {
         // --- VERTICAL ERROR BAR CHART (Point with uncertainty bars) ---
         const canvas = document.getElementById('error-bar-chart');
         const ctx = canvas ? canvas.getContext('2d') : null;
-
+        console.log(details.error, ctx);
+        
         if (details.error && ctx) {
             canvas.style.display = 'block'; // Ensure canvas is visible
             plotErrorBars(method, details.error);
