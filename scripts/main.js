@@ -812,100 +812,306 @@ function openDetailsModal(method) {
     modal.classList.remove("hidden");
 }
 
-function plotErrorBarChart(ctx, paramName, minValue, maxValue, centralValue) {
-    const barHeight = 30;
-    const centerLineThickness = 2;
-    const errorBarThickness = 1;
-    const paddingLeft = 50;
-    const paddingBottom = 30;
-    const textOffset = 5;
+function plotErrorBarsIndividual(method, statsData, paramToPlot, ctx) {
 
-    const canvasWidth = ctx.canvas.width;
-    const canvasHeight = ctx.canvas.height;
+    console.log(`Plotting ${paramToPlot} for ${method}`, statsData);
 
-    // Trouver la plage globale pour normaliser les valeurs
-    let minGlobal = Infinity;
-    let maxGlobal = -Infinity;
-    allResults.forEach(result => {
-        const errors = result.errors;
-        if (errors) {
-            for (const methodErrors in errors) {
-                if (errors[methodErrors] && errors[methodErrors][paramName]) {
-                    minGlobal = Math.min(minGlobal, errors[methodErrors][paramName].min);
-                    maxGlobal = Math.max(maxGlobal, errors[methodErrors][paramName].max);
-                }
-            }
-        }
-    });
+    if (!statsData || !statsData[paramToPlot]) return;
 
-    // Si minGlobal et maxGlobal sont égaux, on ajuste légèrement pour éviter la division par zéro
-    if (minGlobal === maxGlobal) {
-        minGlobal -= Math.abs(centralValue) * 0.1;
-        maxGlobal += Math.abs(centralValue) * 0.1;
-        if (minGlobal === maxGlobal) { // Cas où centralValue est aussi 0
-            minGlobal = -1;
-            maxGlobal = 1;
-        }
-    }
 
-    const scale = (value) => paddingLeft + (canvasWidth - 2 * paddingLeft) * (value - minGlobal) / (maxGlobal - minGlobal);
 
-    // Dessiner l'axe horizontal
-    ctx.beginPath();
-    ctx.moveTo(paddingLeft, canvasHeight - paddingBottom);
-    ctx.lineTo(canvasWidth - paddingLeft, canvasHeight - paddingBottom);
-    ctx.strokeStyle = 'black';
-    ctx.lineWidth = 1;
-    ctx.stroke();
+    const labels = [paramToPlot];
 
-    // Dessiner le nom du paramètre sur l'axe Y
-    ctx.fillStyle = 'black';
-    ctx.font = '12px Arial';
-    ctx.textAlign = 'left';
-    ctx.fillText(paramName, 10, canvasHeight / 2);
 
-    // Dessiner la barre d'erreur
-    const yCenter = canvasHeight / 2 - barHeight / 2;
-    const xMin = scale(minValue);
-    const xMax = scale(maxValue);
-    const xCentral = scale(centralValue);
 
-    ctx.beginPath();
-    ctx.moveTo(xMin, yCenter + barHeight / 2);
-    ctx.lineTo(xMax, yCenter + barHeight / 2);
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.7)';
-    ctx.lineWidth = errorBarThickness * 2;
-    ctx.stroke();
+    const means = { [paramToPlot]: statsData[paramToPlot].central };
 
-    // Dessiner la ligne centrale
-    ctx.beginPath();
-    ctx.moveTo(xCentral, yCenter);
-    ctx.lineTo(xCentral, yCenter + barHeight);
-    ctx.strokeStyle = 'blue';
-    ctx.lineWidth = centerLineThickness;
-    ctx.stroke();
+    const mins = { [paramToPlot]: statsData[paramToPlot].min };
 
-    // Afficher la valeur centrale
-    ctx.fillStyle = 'blue';
-    ctx.font = '10px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText(centralValue.toFixed(3), xCentral, yCenter - textOffset);
-}
+    const maxs = { [paramToPlot]: statsData[paramToPlot].max };
 
-// Fonction utilitaire pour convertir le nom de la méthode (optionnel)
-function methodToName(method) {
-    switch (method) {
-        case 'mlp':
-            return 'MLP';
-        case 'cnn':
-            return 'CNN';
-        case 'gen':
-            return 'Génétique';
-        case 'rand':
-            return 'Aléatoire';
-        default:
-            return method.toUpperCase();
-    }
+    // Access the predicted value from resultDetails
+
+    const predictedValue = resultDetails[method].params[paramToPlot];
+
+
+
+    // Prepare data for vertical points with error bars
+
+    const dataPoints = labels.map(param => ({
+
+        x: param, // Parameter name on X-axis
+
+        y: means[param], // Mean value on Y-axis
+
+        yMin: mins[param], // Min value for error bar
+
+        yMax: maxs[param], // Max value for error bar
+
+        predicted: predictedValue // Add predicted value
+
+    }));
+
+
+
+    const errorBarData = {
+
+        labels: labels,
+
+        datasets: [{
+
+            label: `${methodToName(method)} – ${paramToPlot}`,
+
+            data: dataPoints,
+
+            backgroundColor: 'rgba(54, 162, 235, 0.5)', // Color for the mean point
+
+            borderColor: 'rgb(54, 162, 235)',
+
+            borderWidth: 1,
+
+            pointRadius: 8, // Size of the mean point
+
+            pointBackgroundColor: 'rgb(54, 162, 235)',
+
+            pointBorderColor: 'rgb(54, 162, 235)',
+
+            type: 'scatter', // Use scatter type for the mean point
+
+            showLine: false, // Do not draw lines between points
+
+            errorBarColor: 'rgb(54, 162, 235)', // Custom property for error bar color
+
+            errorBarLineWidth: 2, // Custom property
+
+            errorBarWhiskerWidth: 10 // Custom property
+
+        },
+
+        {
+
+            label: `Prédiction – ${paramToPlot}`,
+
+            data: dataPoints.map(p => ({ x: p.x, y: p.predicted })),
+
+            backgroundColor: 'rgba(255, 99, 132, 0.8)', // Color for the predicted point
+
+            borderColor: 'rgb(255, 99, 132)',
+
+            borderWidth: 1,
+
+            pointRadius: 6,
+
+            pointBackgroundColor: 'rgb(255, 99, 132)',
+
+            pointBorderColor: 'rgb(255, 99, 132)',
+
+            type: 'scatter',
+
+            showLine: false
+
+        }]
+
+    };
+
+
+
+    const config = {
+
+        type: 'scatter', // Main chart type is scatter
+
+        data: errorBarData,
+
+        options: {
+
+            responsive: true,
+
+            maintainAspectRatio: false,
+
+            plugins: {
+
+                legend: { display: false },
+
+                tooltip: {
+
+                    enabled: true,
+
+                    callbacks: {
+
+                        label: function(context) {
+
+                            const point = context.raw;
+
+                            if (context.datasetIndex === 0) {
+
+                                return [
+
+                                    `Paramètre: ${point.x}`,
+
+                                    `Moyenne: ${formatFullNumber(point.y)}`,
+
+                                    `Min: ${formatFullNumber(point.yMin)}`,
+
+                                    `Max: ${formatFullNumber(point.yMax)}`
+
+                                ];
+
+                            } else {
+
+                                return [`Prédiction: ${formatFullNumber(point.y)}`];
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            },
+
+            scales: {
+
+                x: {
+
+                    type: 'category', // Use category scale for parameter labels
+
+                    labels: labels,
+
+                    title: { display: true, text: 'Paramètre' },
+
+                    grid: {
+
+                        display: false // Hide vertical grid lines
+
+                    },
+
+                    // Center the label on the X-axis
+
+                    ticks: {
+
+                        align: 'center'
+
+                    }
+
+                },
+
+                y: {
+
+                    beginAtZero: false,
+
+                    title: { display: true, text: 'Valeur' },
+
+                    ticks: {
+
+                        callback: function(value) {
+
+                            return formatFullNumber(value); // Use full precision for ticks
+
+                        }
+
+                    },
+
+                    // Adjust the scale to fit the error bars
+
+                    suggestedMin: Math.min(...dataPoints.map(p => p.yMin)),
+
+                    suggestedMax: Math.max(...dataPoints.map(p => p.yMax))
+
+                }
+
+            }
+
+        },
+
+        // Custom plugin to draw error bars if 'chartjs-chart-error-bars' is not used
+
+        plugins: [{
+
+            id: 'errorBarsPlugin',
+
+            afterDatasetsDraw(chart, args, options) {
+
+                const { ctx, chartArea: { left, right, top, bottom, width, height }, scales: { x, y } } = chart;
+
+
+
+                chart.data.datasets.forEach((dataset, datasetIndex) => {
+
+                    if (datasetIndex === 0 && dataset.type === 'scatter' && dataset.errorBarColor) {
+
+                        ctx.save();
+
+                        ctx.strokeStyle = dataset.errorBarColor;
+
+                        ctx.lineWidth = dataset.errorBarLineWidth || 1;
+
+
+
+                        dataset.data.forEach((point, index) => {
+
+                            const xCoord = x.getPixelForValue(point.x);
+
+                            const yMin = y.getPixelForValue(point.yMin);
+
+                            const yMax = y.getPixelForValue(point.yMax);
+
+                            const whiskerWidth = dataset.errorBarWhiskerWidth / 2 || 5;
+
+
+
+                            // Draw vertical line
+
+                            ctx.beginPath();
+
+                            ctx.moveTo(xCoord, yMin);
+
+                            ctx.lineTo(xCoord, yMax);
+
+                            ctx.stroke();
+
+
+
+                            // Draw top whisker
+
+                            ctx.beginPath();
+
+                            ctx.moveTo(xCoord - whiskerWidth, yMin);
+
+                            ctx.lineTo(xCoord + whiskerWidth, yMin);
+
+                            ctx.stroke();
+
+
+
+                            // Draw bottom whisker
+
+                            ctx.beginPath();
+
+                            ctx.moveTo(xCoord - whiskerWidth, yMax);
+
+                            ctx.lineTo(xCoord + whiskerWidth, yMax);
+
+                            ctx.stroke();
+
+                        });
+
+                        ctx.restore();
+
+                    }
+
+                });
+
+            }
+
+        }]
+
+    };
+
+
+
+    new Chart(ctx, config);
+
 }
 
 // Permettre le traitement batch des fichiers
