@@ -746,145 +746,149 @@ function openDetailsModal(method) {
 
 function plotErrorBars(method, statsData) {
     console.log(method, statsData);
-    const ctx = document.getElementById('error-bar-chart').getContext('2d');
     if (!statsData) return;
 
     const labels = ['J0', 'Rs', 'Rsh', 'n'];
+    const chartIds = ['error-bar-chart-j0', 'error-bar-chart-rs', 'error-bar-chart-rsh', 'error-bar-chart-n'];
+    const paramsToPlot = ['J0', 'Rs', 'Rsh', 'n'];
 
-    const means = {};
-    const mins = {};
-    const maxs = {};
-    
-    labels.forEach(param => {
+    paramsToPlot.forEach((param, index) => {
+        const ctx = document.getElementById(chartIds[index]).getContext('2d');
         const entry = statsData[param];
-        if (entry) {
-            means[param] = entry.central;
-            mins[param] = entry.min;
-            maxs[param] = entry.max;
+
+        if (!entry) {
+            // If no data for this parameter, clear the chart area and return
+            if (window[`errorBarChart_${param}`]) {
+                window[`errorBarChart_${param}`].destroy();
+                delete window[`errorBarChart_${param}`];
+            }
+            return;
         }
-    });
 
-    // Prepare data for vertical points with error bars
-    const dataPoints = labels.map(param => ({
-        x: param, // Parameter name on X-axis
-        y: means[param], // Mean value on Y-axis
-        yMin: mins[param], // Min value for error bar
-        yMax: maxs[param] // Max value for error bar
-    }));
+        const means = { [param]: entry.central };
+        const mins = { [param]: entry.min };
+        const maxs = { [param]: entry.max };
 
-    const errorBarData = {
-        labels: labels,
-        datasets: [{
-            label: `${methodToName(method)} – Moyenne et écart`,
-            data: dataPoints,
-            backgroundColor: 'rgba(54, 162, 235, 0.5)', // Color for the points
-            borderColor: 'rgb(54, 162, 235)',
-            borderWidth: 1,
-            pointRadius: 8, // Size of the point
-            pointBackgroundColor: 'rgb(54, 162, 235)',
-            pointBorderColor: 'rgb(54, 162, 235)',
-            type: 'scatter', // Use scatter type for points
-            showLine: false, // Do not draw lines between points
-            // Custom error bar rendering (will be handled by a plugin or manual drawing if no plugin)
-            // For Chart.js 3.x+, you might need a plugin like 'chartjs-chart-error-bars'
-            // If not using a plugin, you'd draw these manually in a custom plugin or afterDraw
-            errorBarColor: 'rgb(54, 162, 235)', // This property is custom, not native Chart.js
-            errorBarLineWidth: 2, // This property is custom
-            errorBarWhiskerWidth: 10 // This property is custom
-        }]
-    };
+        // Prepare data for vertical points with error bars
+        const dataPoints = [{
+            x: param, // Parameter name on X-axis (only one)
+            y: means[param], // Mean value on Y-axis
+            yMin: mins[param], // Min value for error bar
+            yMax: maxs[param] // Max value for error bar
+        }];
 
-    const config = {
-        type: 'scatter', // Main chart type is scatter
-        data: errorBarData,
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    enabled: true,
-                    callbacks: {
-                        label: function(context) {
-                            const point = context.raw;
-                            return [
-                                `Paramètre: ${point.x}`,
-                                `Moyenne: ${formatFullNumber(point.y)}`,
-                                `Min: ${formatFullNumber(point.yMin)}`,
-                                `Max: ${formatFullNumber(point.yMax)}`
-                            ];
+        const errorBarData = {
+            labels: [param], // Only one label
+            datasets: [{
+                label: `${methodToName(method)} – ${param}`,
+                data: dataPoints,
+                backgroundColor: 'rgba(54, 162, 235, 0.5)', // Color for the point
+                borderColor: 'rgb(54, 162, 235)',
+                borderWidth: 1,
+                pointRadius: 8, // Size of the point
+                pointBackgroundColor: 'rgb(54, 162, 235)',
+                pointBorderColor: 'rgb(54, 162, 235)',
+                type: 'scatter', // Use scatter type for the point
+                showLine: false, // Do not draw lines
+                errorBarColor: 'rgb(54, 162, 235)', // Custom property for error bar color
+                errorBarLineWidth: 2, // Custom property for error bar line width
+                errorBarWhiskerWidth: 10 // Custom property for error bar whisker width
+            }]
+        };
+
+        const config = {
+            type: 'scatter', // Main chart type is scatter
+            data: errorBarData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function(context) {
+                                const point = context.raw;
+                                return [
+                                    `Paramètre: ${point.x}`,
+                                    `Moyenne: ${formatFullNumber(point.y)}`,
+                                    `Min: ${formatFullNumber(point.yMin)}`,
+                                    `Max: ${formatFullNumber(point.yMax)}`
+                                ];
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        type: 'category', // Use category scale for the single parameter label
+                        labels: [param],
+                        title: { display: true, text: 'Paramètre' },
+                        grid: {
+                            display: false // Hide vertical grid lines
+                        }
+                    },
+                    y: {
+                        beginAtZero: false,
+                        title: { display: true, text: 'Valeur' },
+                        ticks: {
+                            callback: function(value) {
+                                return formatFullNumber(value); // Use full precision for ticks
+                            }
                         }
                     }
                 }
             },
-            scales: {
-                x: {
-                    type: 'category', // Use category scale for parameter labels
-                    labels: labels,
-                    title: { display: true, text: 'Paramètre' },
-                    grid: {
-                        display: false // Hide vertical grid lines
-                    }
-                },
-                y: {
-                    beginAtZero: false,
-                    title: { display: true, text: 'Valeur' },
-                    ticks: {
-                        callback: function(value) {
-                            return formatFullNumber(value); // Use full precision for ticks
+            // Custom plugin to draw error bars if 'chartjs-chart-error-bars' is not used
+            plugins: [{
+                id: 'errorBarsPlugin',
+                afterDatasetsDraw(chart, args, options) {
+                    const { ctx, chartArea: { left, right, top, bottom, width, height }, scales: { x, y } } = chart;
+
+                    chart.data.datasets.forEach((dataset, datasetIndex) => {
+                        if (dataset.type === 'scatter' && dataset.errorBarColor) {
+                            ctx.save();
+                            ctx.strokeStyle = dataset.errorBarColor;
+                            ctx.lineWidth = dataset.errorBarLineWidth || 1;
+
+                            dataset.data.forEach((point, index) => {
+                                const xCoord = x.getPixelForValue(point.x);
+                                const yMean = y.getPixelForValue(point.y);
+                                const yMin = y.getPixelForValue(point.yMin);
+                                const yMax = y.getPixelForValue(point.yMax);
+                                const whiskerWidth = dataset.errorBarWhiskerWidth / 2 || 5;
+
+                                // Draw vertical line
+                                ctx.beginPath();
+                                ctx.moveTo(xCoord, yMin);
+                                ctx.lineTo(xCoord, yMax);
+                                ctx.stroke();
+
+                                // Draw top whisker
+                                ctx.beginPath();
+                                ctx.moveTo(xCoord - whiskerWidth, yMin);
+                                ctx.lineTo(xCoord + whiskerWidth, yMin);
+                                ctx.stroke();
+
+                                // Draw bottom whisker
+                                ctx.beginPath();
+                                ctx.moveTo(xCoord - whiskerWidth, yMax);
+                                ctx.lineTo(xCoord + whiskerWidth, yMax);
+                                ctx.stroke();
+                            });
+                            ctx.restore();
                         }
-                    }
+                    });
                 }
-            }
-        },
-        // Custom plugin to draw error bars if 'chartjs-chart-error-bars' is not used
-        plugins: [{
-            id: 'errorBarsPlugin',
-            afterDatasetsDraw(chart, args, options) {
-                const { ctx, chartArea: { left, right, top, bottom, width, height }, scales: { x, y } } = chart;
+            }]
+        };
 
-                chart.data.datasets.forEach((dataset, datasetIndex) => {
-                    if (dataset.type === 'scatter' && dataset.errorBarColor) {
-                        ctx.save();
-                        ctx.strokeStyle = dataset.errorBarColor;
-                        ctx.lineWidth = dataset.errorBarLineWidth || 1;
-
-                        dataset.data.forEach((point, index) => {
-                            const xCoord = x.getPixelForValue(point.x);
-                            const yMean = y.getPixelForValue(point.y);
-                            const yMin = y.getPixelForValue(point.yMin);
-                            const yMax = y.getPixelForValue(point.yMax);
-                            const whiskerWidth = dataset.errorBarWhiskerWidth / 2 || 5;
-
-                            // Draw vertical line
-                            ctx.beginPath();
-                            ctx.moveTo(xCoord, yMin);
-                            ctx.lineTo(xCoord, yMax);
-                            ctx.stroke();
-
-                            // Draw top whisker
-                            ctx.beginPath();
-                            ctx.moveTo(xCoord - whiskerWidth, yMin);
-                            ctx.lineTo(xCoord + whiskerWidth, yMin);
-                            ctx.stroke();
-
-                            // Draw bottom whisker
-                            ctx.beginPath();
-                            ctx.moveTo(xCoord - whiskerWidth, yMax);
-                            ctx.lineTo(xCoord + whiskerWidth, yMax);
-                            ctx.stroke();
-                        });
-                        ctx.restore();
-                    }
-                });
-            }
-        }]
-    };
-
-    if (window.errorBarChart) {
-        window.errorBarChart.destroy();
-    }
-    window.errorBarChart = new Chart(ctx, config);
+        const chartKey = `errorBarChart_${param}`;
+        if (window[chartKey]) {
+            window[chartKey].destroy();
+        }
+        window[chartKey] = new Chart(ctx, config);
+    });
 }
 
 // Permettre le traitement batch des fichiers
