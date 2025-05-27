@@ -749,8 +749,7 @@ function plotErrorBarsIndividual(method, statsData, paramToPlot, ctx) {
     if (!statsData || !statsData[paramToPlot]) return;
 
     const labels = [paramToPlot];
-
-    const means = { [paramToPlot]: statsData[paramToPlot].central };
+    
     const mins = { [paramToPlot]: statsData[paramToPlot].min };
     const maxs = { [paramToPlot]: statsData[paramToPlot].max };
     // Access the predicted value from resultDetails
@@ -758,7 +757,7 @@ function plotErrorBarsIndividual(method, statsData, paramToPlot, ctx) {
 
     // Prepare data for vertical points with error bars
     const dataPoints = labels.map(param => ({
-        x: param, // Parameter name on X-axis
+        x: 1, // Parameter name on X-axis
         y: means[param], // Mean value on Y-axis
         yMin: mins[param], // Min value for error bar
         yMax: maxs[param], // Max value for error bar
@@ -814,10 +813,9 @@ function plotErrorBarsIndividual(method, statsData, paramToPlot, ctx) {
                                     `Paramètre: ${point.x}`,
                                     `Moyenne: ${formatFullNumber(point.y)}`,
                                     `Min: ${formatFullNumber(point.yMin)}`,
-                                    `Max: ${formatFullNumber(point.yMax)}`
+                                    `Max: ${formatFullNumber(point.yMax)}`,
+                                    `Prédiction: ${formatFullNumber(point.y)}`
                                 ];
-                            } else {
-                                return [`Prédiction: ${formatFullNumber(point.y)}`];
                             }
                         }
                     }
