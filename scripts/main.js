@@ -812,36 +812,30 @@ function plotErrorBarsIndividual(method, statsData, paramToPlot, ctx) {
                                     `Paramètre: ${point.x}`,
                                     `Moyenne: ${formatFullNumber(point.y)}`,
                                     `Min: ${formatFullNumber(point.yMin)}`,
-                                    `Max: ${formatFullNumber(point.yMax)}`,
-                                    `Prédiction: ${formatFullNumber(point.y)}`
-                                ];
-                            }
+                                    `Max: ${formatFullNumber(point.yMax)}`
+                                    ];
+                                } else {
+                                return [`Prédiction: ${formatFullNumber(point.y)}`];
+                              }
                         }
                     }
                 }
             },
             scales: {
                 x: {
-                    type: 'category', // Use category scale for parameter labels
-                    labels: labels,
-                    title: { display: true, text: 'Paramètre' },
-                    grid: {
-                        display: false // Hide vertical grid lines
-                    },
-                    // Center the label on the X-axis
-                    ticks: {
-                        align: 'center'
-                    }
+                    type: 'linear',
+                    min: 0,
+                    max: 2,
+                    display: false
                 },
                 y: {
                     beginAtZero: false,
                     title: { display: true, text: 'Valeur' },
                     ticks: {
                         callback: function(value) {
-                            return formatFullNumber(value); // Use full precision for ticks
+                            return formatFullNumber(value);
                         }
                     },
-                    // Adjust the scale to fit the error bars
                     suggestedMin: Math.min(...dataPoints.map(p => p.yMin)),
                     suggestedMax: Math.max(...dataPoints.map(p => p.yMax))
                 }
