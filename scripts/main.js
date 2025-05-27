@@ -758,7 +758,6 @@ function plotErrorBarsIndividual(method, statsData, paramToPlot, ctx) {
     // Prepare data for vertical points with error bars
     const dataPoints = labels.map(param => ({
         x: 1, // Parameter name on X-axis
-        y: means[param], // Mean value on Y-axis
         yMin: mins[param], // Min value for error bar
         yMax: maxs[param], // Max value for error bar
         predicted: predictedValue // Add predicted value
