@@ -167,19 +167,14 @@ label[for="file-input"]:hover {
 }
 
 .left-panel {
-  width: 100%;
+  width: 50%;
 }
 
 .right-panel {
-  display: flex;
-  flex-wrap: wrap;
-  align-content: flex-start;
-  flex-direction: row;
+    display: flex;
+    flex-direction: row;
 }
 
-.left-panel, .right-panel {
-  min-width: 300px;
-}
 
 .right-panel .result-card {
   width: 44%;
@@ -187,13 +182,15 @@ label[for="file-input"]:hover {
 
 /* Cartes de résultats */
 .result-card {
-  min-width: 44%;
-  background: var(--card-background);
-  border-radius: var(--border-radius);
-  box-shadow: var(--shadow);
-  padding: 1rem;
-  margin-bottom: 1rem;
-  transition: box-shadow var(--transition-speed);
+    display: flex;
+    background: var(--card-background);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    padding: 1rem;
+    margin-bottom: 1rem;
+    transition: box-shadow var(--transition-speed);
+    flex-direction: column;
+    justify-content: center;
 }
 
 .result-card:hover {
