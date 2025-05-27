@@ -159,7 +159,6 @@ function createParamsTable(data) {
     }
 
     const methodMap = {
-        cnn: "CNN",
         genetique: "Génétique",
         mlp: "MLP",
         random: "Random"
@@ -183,7 +182,7 @@ function createParamsTable(data) {
 
     for (const [key, label] of Object.entries(methodMap)) {
         const params = data[`params_${key}`];
-        const ssd = data[`ssd_${key}`] ?? data[`ssd_${key.slice(0, 3)}`]; // handle both 'ssd_cnn' and 'ssd_gen'
+        const ssd = data[`ssd_${key}`] ?? data[`ssd_${key.slice(0, 3)}`];
 
         if (params) {
             tableHTML += `
@@ -217,7 +216,6 @@ function showToast(message, type) {
 
 function methodToName(methodKey) {
     const methodNames = {
-        cnn: "CNN",
         genetique: "Génétique",
         mlp: "MLP",
         random: "Random"
