@@ -360,7 +360,7 @@ label[for="file-input"]:hover {
 .modal-content {
   background: var(--card-background);
   padding: 20px;
-  max-width: 80%;
+  width: 90%;
   max-height: 90%;
   overflow-y: auto;
   border-radius: var(--border-radius);
