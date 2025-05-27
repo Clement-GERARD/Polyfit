@@ -7,6 +7,7 @@ let currentFileName = "";  // Nom du fichier en cours de traitement
 let charts = {};           // Stockage des instances de graphiques
 
 function calculateBoxplotStats(data) {
+    console.log(data)
     if (!data || data.length === 0) {
         return { min: undefined, q1: undefined, median: undefined, q3: undefined, max: undefined };
     }
