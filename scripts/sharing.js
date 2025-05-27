@@ -536,7 +536,6 @@ function updateInterfaceWithSharedResults(parsedData) {
         // Simuler un objet de données compatible avec updateComparisonTable
         const tableData = {
             params_mlp: lastResult.methods.mlp,
-            params_cnn: lastResult.methods.cnn,
             params_genetique: lastResult.methods.gen,
             params_random: lastResult.methods.rand
         };
@@ -547,7 +546,6 @@ function updateInterfaceWithSharedResults(parsedData) {
         // Mettre à jour les SSD si disponibles
         const ssdData = {
             ssd_mlp: lastResult.methods.mlp?.SSD,
-            ssd_cnn: lastResult.methods.cnn?.SSD,
             ssd_gen: lastResult.methods.gen?.SSD,
             ssd_rand: lastResult.methods.rand?.SSD
         };
@@ -628,7 +626,6 @@ function resetInterface() {
     updatePlaceholder("#graph-zone", "Sélectionnez un fichier pour afficher les courbes");
     updatePlaceholder("#random-method", "Sélectionnez un fichier pour lancer l'analyse");
     updatePlaceholder("#mlp-method", "Sélectionnez un fichier pour lancer l'analyse");
-    updatePlaceholder("#cnn-method", "Sélectionnez un fichier pour lancer l'analyse");
     updatePlaceholder("#genetic-method", "Sélectionnez un fichier pour lancer l'analyse");
     updatePlaceholder("#boxplot-zone", "Sélectionnez un fichier pour lancer l'analyse");
     
