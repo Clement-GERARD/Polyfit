@@ -11,7 +11,6 @@ const boxplotConfig = {
 const methodColors = {
     rand: "#FF6B6B", // Rouge
     mlp: "#4ECDC4",  // Turquoise
-    cnn: "#FFD166",  // Jaune
     gen: "#6B5CA5"   // Violet
 };
 
@@ -19,7 +18,6 @@ const methodColors = {
 const methodNames = {
     rand: "Classique",
     mlp: "MLP",
-    cnn: "CNN",
     gen: "Génétique"
 };
 
@@ -481,7 +479,7 @@ function calculateSSD(data) {
     }
     
     const ssdResults = {};
-    const methods = ['random', 'mlp', 'cnn', 'genetique'];
+    const methods = ['random', 'mlp', 'genetique'];
     
     // Données expérimentales
     const experimentalData = data.curve_data;
