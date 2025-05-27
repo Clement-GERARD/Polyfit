@@ -307,7 +307,6 @@ function handleFiles(event) {
     updatePlaceholder("#graph-zone", "Affichage des courbes en cours...");
     updatePlaceholder("#random-method", "Analyse par Fit Classique en cours...");
     updatePlaceholder("#mlp-method", "Analyse par MLP en cours...");
-    updatePlaceholder("#cnn-method", "Analyse par CNN en cours...");
     updatePlaceholder("#genetic-method", "Analyse par Fit Génétique en cours...");
 
     // Réinitialiser le tableau
@@ -421,10 +420,6 @@ function storeResults(data) {
         result.methods.mlp = data.params_mlp;
     }
 
-    if (data.params_cnn) {
-        result.methods.cnn = data.params_cnn;
-    }
-
     if (data.params_genetique) {
         result.methods.gen = data.params_genetique;
     }
@@ -435,10 +430,6 @@ function storeResults(data) {
 
     if (data.curve_image_mlp) {
         result.images.mlp = data.curve_image_mlp;
-    }
-
-    if (data.curve_image_cnn) {
-        result.images.cnn = data.curve_image_cnn;
     }
 
     if (data.curve_image_gen) {
@@ -466,16 +457,7 @@ function updateComparisonTable(data) {
         updateTableCell("mlp", "Rsh", formatFullNumber(data.params_mlp.Rsh));
         updateTableCell("mlp", "n", formatFullNumber(data.params_mlp.n));
     }
-
-    // Méthode CNN
-    if (data.params_cnn) {
-        updateTableCell("cnn", "J0", formatFullNumber(data.params_cnn.J0));
-        updateTableCell("cnn", "Jph", formatFullNumber(data.params_cnn.Jph));
-        updateTableCell("cnn", "Rs", formatFullNumber(data.params_cnn.Rs));
-        updateTableCell("cnn", "Rsh", formatFullNumber(data.params_cnn.Rsh));
-        updateTableCell("cnn", "n", formatFullNumber(data.params_cnn.n));
-    }
-
+    
     // Méthode génétique
     if (data.params_genetique) {
         updateTableCell("gen", "J0", formatFullNumber(data.params_genetique.J0));
@@ -511,24 +493,6 @@ function displayResults(data) {
             image: data.curve_image_mlp || null,
             ssd: data.ssd_mlp || null,
             error: data.error_bounds_mlp
-        };
-    }
-
-    // Méthode CNN
-    if (data.params_cnn) {
-        updatePlaceholder("#cnn-method", `
-            J0: ${formatFullNumber(data.params_cnn.J0)}<br>
-            Jph: ${formatFullNumber(data.params_cnn.Jph)}<br>
-            Rs: ${formatFullNumber(data.params_cnn.Rs)}<br>
-            Rsh: ${formatFullNumber(data.params_cnn.Rsh)}<br>
-            n: ${formatFullNumber(data.params_cnn.n)}<br>
-            SSD: ${formatFullNumber(data.ssd_cnn)}
-        `);
-        resultDetails["cnn"] = {
-            params: data.params_cnn,
-            image: data.curve_image_cnn || null,
-            ssd: data.ssd_cnn || null,
-            error: data.error_bounds_cnn
         };
     }
 
@@ -612,7 +576,6 @@ function calculateAndDisplaySSD(data) {
     const ssdValues = {
         rand: Math.random() * 0.01,
         mlp: Math.random() * 0.005,
-        cnn: Math.random() * 0.002,
         gen: Math.random() * 0.001
     };
     
@@ -664,7 +627,6 @@ function methodToName(methodKey) {
     switch(methodKey) {
         case 'rand': return 'Classique';
         case 'mlp': return 'MLP';
-        case 'cnn': return 'CNN';
         case 'gen': return 'Génétique';
         default: return methodKey;
     }
