@@ -476,7 +476,6 @@ function createPresentationSlides(container) {
     const methods = [
         { key: 'rand', name: 'Fit Classique' },
         { key: 'mlp', name: 'MLP' },
-        { key: 'cnn', name: 'CNN' },
         { key: 'gen', name: 'Génétique' }
     ];
     
