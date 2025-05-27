@@ -700,23 +700,29 @@ function openDetailsModal(method) {
         // Append the table to the distributionZone first
         distributionZone.innerHTML = paramsHTML;
 
-        const canvas = document.createElement('canvas');
-        canvas.id = 'error-bar-chart';
-        canvas.style.maxHeight = '300px';
-        distributionZone.appendChild(canvas);
-        
-        const ctx = canvas.getContext('2d');
-        
-        if (details.error && ctx) {
-            canvas.style.display = 'block'; // Ensure canvas is visible
-            plotErrorBars(method, details.error);
-        } else if (canvas && ctx) {
-            ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
-            canvas.style.display = 'none'; // Optionally hide the canvas if no data
+        // --- ERROR BAR CHARTS ---
+        if (details.error) {
+            const chartContainer = document.createElement('div');
+            chartContainer.style.display = 'grid';
+            chartContainer.style.gridTemplateColumns = 'repeat(2, 1fr)'; // Two columns
+            chartContainer.style.gap = '10px';
+            distributionZone.appendChild(chartContainer);
+
+            ['J0', 'Rs', 'Rsh', 'n'].forEach(param => {
+                const canvas = document.createElement('canvas');
+                canvas.id = `error-bar-chart-${param.toLowerCase()}`;
+                canvas.style.maxHeight = '200px'; // Adjust as needed
+                chartContainer.appendChild(canvas);
+                plotErrorBarsIndividual(method, details.error, param, canvas.getContext('2d'));
+            });
         } else {
-            // Add a message if canvas or context is not available for the chart
+            // Remove any existing chart container if no error data
+            const existingChartContainer = distributionZone.querySelector('div[style*="grid-template-columns"]');
+            if (existingChartContainer) {
+                existingChartContainer.remove();
+            }
             const chartPlaceholder = document.createElement('p');
-            chartPlaceholder.textContent = "Graphique d'erreurs non disponible.";
+            chartPlaceholder.textContent = "Graphiques d'erreurs non disponibles.";
             distributionZone.appendChild(chartPlaceholder); // Append after params table
         }
                 
