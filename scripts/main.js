@@ -763,11 +763,11 @@ function plotErrorBarsIndividual(method, statsData, paramToPlot, ctx) {
   }));
 
   const errorBarData = {
-   labels: labels,
+   labels: labels.flatMap(label => [label, `Prédiction - ${label}`]), // Create two labels per parameter
    datasets: [
     {
      label: `${methodToName(method)} – ${paramToPlot}`,
-     data: dataPoints.map(p => ({ x: p.x, y: (p.yMin + p.yMax) / 2, yMin: p.yMin, yMax: p.yMax })), // Use midpoint for positioning error bar
+     data: dataPoints.map((p, index) => ({ x: labels[index], y: (p.yMin + p.yMax) / 2, yMin: p.yMin, yMax: p.yMax })), // Use original label for error bar
      borderColor: 'rgb(54, 162, 235)',
      borderWidth: 1,
      type: 'line', // Use line type for the error bar
@@ -779,7 +779,7 @@ function plotErrorBarsIndividual(method, statsData, paramToPlot, ctx) {
     },
     {
      label: `Prédiction – ${paramToPlot}`,
-     data: dataPoints.map(p => ({ x: `${p.x} (Prédiction)`, y: p.predicted })), // Add label to shift to the right
+     data: dataPoints.map((p, index) => ({ x: `Prédiction - ${labels[index]}`, y: p.predicted })), // Use modified label for prediction
      backgroundColor: 'rgba(255, 99, 132, 0.8)', // Color for the predicted point
      borderColor: 'rgb(255, 99, 132)',
      borderWidth: 1,
@@ -821,7 +821,7 @@ function plotErrorBarsIndividual(method, statsData, paramToPlot, ctx) {
     scales: {
      x: {
       type: 'category', // Use category scale for parameter labels
-      labels: labels.flatMap(label => [label, `${label} (Prédiction)`]), // Add extra label for spacing
+      labels: errorBarData.labels, // Use the expanded labels
       title: { display: true, text: 'Paramètre' },
       grid: {
        display: false // Hide vertical grid lines
@@ -829,7 +829,7 @@ function plotErrorBarsIndividual(method, statsData, paramToPlot, ctx) {
       ticks: {
        align: 'center',
        callback: function(value) {
-        return value.split(' ')[0]; // Display only the parameter name on the axis
+        return value.split(' - ')[1] ? value.split(' - ')[1] : value; // Display only parameter name or prediction label
        }
       }
      },
@@ -860,7 +860,7 @@ function plotErrorBarsIndividual(method, statsData, paramToPlot, ctx) {
        ctx.lineWidth = dataset.errorBarLineWidth || 1;
 
        dataset.data.forEach((point, index) => {
-        const xCoord = x.getPixelForValue(chart.data.labels[index * 2]); // Get x-coordinate for the error bar
+        const xCoord = x.getPixelForValue(point.x); // Get x-coordinate for the error bar
         const yMin = y.getPixelForValue(point.yMin);
         const yMax = y.getPixelForValue(point.yMax);
         const whiskerWidth = dataset.errorBarWhiskerWidth / 2 || 5;
