@@ -899,7 +899,7 @@ function processBatchFiles(files) {
         if (currentIndex < files.length) {
             const file = files[currentIndex];
             currentFileName = file.name;
-            document.getElementById('current-file').textContent = currentFileName + ` (${currentIndex + 1}/${files.length})`;
+            document.getElementById('current-file').textContent = currentFileName + ` (${currentIndex + 1}/${files.length}))`;
             
             updateProcessingStatus("processing");
             uploadFile(file).then(() => {
