@@ -7,255 +7,255 @@ let currentFileName = "";  // Nom du fichier en cours de traitement
 let charts = {};           // Stockage des instances de graphiques
 
 function calculateBoxplotStats(data) {
-            if (!data || data.length === 0) {
-                return { min: undefined, q1: undefined, median: undefined, q3: undefined, max: undefined };
-            }
+    if (!data || data.length === 0) {
+        return { min: undefined, q1: undefined, median: undefined, q3: undefined, max: undefined };
+    }
 
-            const sortedData = [...data].sort((a, b) => a - b);
-            const n = sortedData.length;
+    const sortedData = [...data].sort((a, b) => a - b);
+    const n = sortedData.length;
 
-            const min = sortedData[0];
-            const max = sortedData[n - 1];
+    const min = sortedData[0];
+    const max = sortedData[n - 1];
 
-            let median;
-            if (n % 2 === 0) {
-                median = (sortedData[n / 2 - 1] + sortedData[n / 2]) / 2;
-            } else {
-                median = sortedData[Math.floor(n / 2)];
-            }
+    let median;
+    if (n % 2 === 0) {
+        median = (sortedData[n / 2 - 1] + sortedData[n / 2]) / 2;
+    } else {
+        median = sortedData[Math.floor(n / 2)];
+    }
 
-            // Calculer Q1 et Q3 en utilisant la méthode de la médiane inclusive (courante pour les petits ensembles de données)
-            let q1, q3;
-            if (n >= 4) {
-                // Utilisation de l'interpolation linéaire pour les quartiles, comme le comportement typique du plugin Chart.js boxplot
-                const getQuantile = (arr, q) => {
-                    const index = (arr.length - 1) * q;
-                    const lower = Math.floor(index);
-                    const upper = Math.ceil(index);
-                    const weight = index - lower;
-                    if (lower === upper) return arr[lower];
-                    return arr[lower] * (1 - weight) + arr[upper] * weight;
-                };
+    // Calculer Q1 et Q3 en utilisant la méthode de la médiane inclusive (courante pour les petits ensembles de données)
+    let q1, q3;
+    if (n >= 4) {
+        // Utilisation de l'interpolation linéaire pour les quartiles, comme le comportement typique du plugin Chart.js boxplot
+        const getQuantile = (arr, q) => {
+            const index = (arr.length - 1) * q;
+            const lower = Math.floor(index);
+            const upper = Math.ceil(index);
+            const weight = index - lower;
+            if (lower === upper) return arr[lower];
+            return arr[lower] * (1 - weight) + arr[upper] * weight;
+        };
 
-                q1 = getQuantile(sortedData, 0.25);
-                q3 = getQuantile(sortedData, 0.75);
+        q1 = getQuantile(sortedData, 0.25);
+        q3 = getQuantile(sortedData, 0.75);
 
-            } else if (n === 3) {
-                q1 = sortedData[0]; // Plus petite valeur
-                q3 = sortedData[2]; // Plus grande valeur
-            } else if (n === 2) {
-                q1 = sortedData[0];
-                q3 = sortedData[1];
-            } else if (n === 1) {
-                q1 = sortedData[0];
-                q3 = sortedData[0];
-            } else {
-                q1 = undefined;
-                q3 = undefined;
-            }
-            
-            return { min, q1, median, q3, max };
-        }
+    } else if (n === 3) {
+        q1 = sortedData[0]; // Plus petite valeur
+        q3 = sortedData[2]; // Plus grande valeur
+    } else if (n === 2) {
+        q1 = sortedData[0];
+        q3 = sortedData[1];
+    } else if (n === 1) {
+        q1 = sortedData[0];
+        q3 = sortedData[0];
+    } else {
+        q1 = undefined;
+        q3 = undefined;
+    }
+    
+    return { min, q1, median, q3, max };
+}
 
 // Fonction pour les Moustaches
 function createAllBoxplots() {
-            console.log("allResults:", allResults, "Length:", allResults.length);
+    console.log("allResults:", allResults, "Length:", allResults.length);
 
-            // Vérifier si des résultats sont disponibles
-            if (allResults.length === 0) {
-                console.log("Arrêt de BoxPlots: Pas de données.");
-                return;
+    // Vérifier si des résultats sont disponibles
+    if (allResults.length === 0) {
+        console.log("Arrêt de BoxPlots: Pas de données.");
+        return;
+    }
+
+    // Utiliser toujours les résultats du premier fichier
+    const singleFileResult = allResults[0]; 
+    if (!singleFileResult || !singleFileResult.methods) {
+        updatePlaceholder("#boxplot-zone", "Structure de données invalide dans allResults[0].");
+        console.log("Arrêt de BoxPlots: Structure de données invalide.");
+        return;
+    }
+
+    const parameters = ['J0', 'Jph', 'Rs', 'Rsh', 'n'];
+
+    parameters.forEach(paramKey => {
+        // CORRECTION ICI : Cibler l'ID du canvas réel, pas la div parente
+        const canvasId = `${paramKey}-boxplot-canvas`; 
+        const boxplotElement = document.getElementById(canvasId);
+
+        if (!boxplotElement || !boxplotElement.getContext) {
+            console.error(`Élément canvas '${canvasId}' non trouvé ou non supporté.`);
+            // Afficher un message dans la div spécifique si le canvas n'est pas trouvé
+            const parentDiv = document.getElementById(`${paramKey}-boxplot`);
+            if (parentDiv) {
+                parentDiv.innerHTML = `<div class="content-placeholder">Élément canvas '${canvasId}' non trouvé.</div>`;
+                parentDiv.querySelector('.content-placeholder').style.display = 'flex';
             }
+            return; // Passer au paramètre suivant si le canvas n'existe pas
+        }
 
-            // Utiliser toujours les résultats du premier fichier
-            const singleFileResult = allResults[0]; 
-            if (!singleFileResult || !singleFileResult.methods) {
-                updatePlaceholder("#boxplot-zone", "Structure de données invalide dans allResults[0].");
-                console.log("Arrêt de BoxPlots: Structure de données invalide.");
-                return;
+        // Détruire le graphique existant s'il y en a un
+        if (charts[paramKey]) {
+            charts[paramKey].destroy();
+        }
+
+        const valuesForParam = [];
+        const scatterPoints = [];
+
+        // Collecter les données pour le paramètre actuel à partir des 4 méthodes du fichier unique
+        for (const [methodKey, methodParams] of Object.entries(singleFileResult.methods)) {
+            let value;
+            // Gérer le mappage 'nVth' vers 'n'
+            if (paramKey === 'n' && methodParams['nVth'] !== undefined) {
+                value = parseFloat(methodParams['nVth']);
+            } else if (methodParams[paramKey] !== undefined) {
+                value = parseFloat(methodParams[paramKey]);
+            } else {
+                continue; // Ignorer si le paramètre n'est pas trouvé pour cette méthode
             }
+            valuesForParam.push(value);
 
-            const parameters = ['J0', 'Jph', 'Rs', 'Rsh', 'n'];
+            // Pour les points de dispersion : la coordonnée x sera légèrement décalée autour de 0
+            const jitter = (Math.random() - 0.5) * 0.4; // Ajuster 0.4 pour plus/moins d'étalement
+            scatterPoints.push({ x: 0 + jitter, y: value, method: methodToName(methodKey) });
+        }
 
-            parameters.forEach(paramKey => {
-                // CORRECTION ICI : Cibler l'ID du canvas réel, pas la div parente
-                const canvasId = `${paramKey}-boxplot-canvas`; 
-                const boxplotElement = document.getElementById(canvasId);
+        // Préparer les ensembles de données pour Chart.js
+        const datasets = [];
+        const labels = ['']; // Étiquette unique pour la boîte à moustaches unique
 
-                if (!boxplotElement || !boxplotElement.getContext) {
-                    console.error(`Élément canvas '${canvasId}' non trouvé ou non supporté.`);
-                    // Afficher un message dans la div spécifique si le canvas n'est pas trouvé
-                    const parentDiv = document.getElementById(`${paramKey}-boxplot`);
-                    if (parentDiv) {
-                        parentDiv.innerHTML = `<div class="content-placeholder">Élément canvas '${canvasId}' non trouvé.</div>`;
-                        parentDiv.querySelector('.content-placeholder').style.display = 'flex';
-                    }
-                    return; // Passer au paramètre suivant si le canvas n'existe pas
-                }
+        // Ajouter l'ensemble de données de la boîte à moustaches
+        if (valuesForParam.length > 0) {
+            datasets.push({
+                type: 'boxplot', // Définir explicitement le type pour cet ensemble de données
+                label: `Distribution des prédictions`,
+                backgroundColor: 'rgba(75, 192, 192, 0.6)', // Couleur pour la boîte à moustaches
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1,
+                data: [valuesForParam] // Données pour la boîte à moustaches
+            });
+        } else {
+            // Afficher un message dans la div spécifique si pas assez de données
+            const parentDiv = document.getElementById(`${paramKey}-boxplot`);
+            if (parentDiv) {
+                parentDiv.innerHTML = `<div class="content-placeholder">Pas assez de données pour ${paramKey}.</div>`;
+                parentDiv.querySelector('.content-placeholder').style.display = 'flex';
+            }
+            return; // Passer au paramètre suivant
+        }
 
-                // Détruire le graphique existant s'il y en a un
-                if (charts[paramKey]) {
-                    charts[paramKey].destroy();
-                }
-
-                const valuesForParam = [];
-                const scatterPoints = [];
-
-                // Collecter les données pour le paramètre actuel à partir des 4 méthodes du fichier unique
-                for (const [methodKey, methodParams] of Object.entries(singleFileResult.methods)) {
-                    let value;
-                    // Gérer le mappage 'nVth' vers 'n'
-                    if (paramKey === 'n' && methodParams['nVth'] !== undefined) {
-                        value = parseFloat(methodParams['nVth']);
-                    } else if (methodParams[paramKey] !== undefined) {
-                        value = parseFloat(methodParams[paramKey]);
-                    } else {
-                        continue; // Ignorer si le paramètre n'est pas trouvé pour cette méthode
-                    }
-                    valuesForParam.push(value);
-
-                    // Pour les points de dispersion : la coordonnée x sera légèrement décalée autour de 0
-                    const jitter = (Math.random() - 0.5) * 0.4; // Ajuster 0.4 pour plus/moins d'étalement
-                    scatterPoints.push({ x: 0 + jitter, y: value, method: methodToName(methodKey) });
-                }
-
-                // Préparer les ensembles de données pour Chart.js
-                const datasets = [];
-                const labels = ['']; // Étiquette unique pour la boîte à moustaches unique
-
-                // Ajouter l'ensemble de données de la boîte à moustaches
-                if (valuesForParam.length > 0) {
-                    datasets.push({
-                        type: 'boxplot', // Définir explicitement le type pour cet ensemble de données
-                        label: `Distribution des prédictions`,
-                        backgroundColor: 'rgba(75, 192, 192, 0.6)', // Couleur pour la boîte à moustaches
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        borderWidth: 1,
-                        data: [valuesForParam] // Données pour la boîte à moustaches
-                    });
-                } else {
-                    // Afficher un message dans la div spécifique si pas assez de données
-                    const parentDiv = document.getElementById(`${paramKey}-boxplot`);
-                    if (parentDiv) {
-                        parentDiv.innerHTML = `<div class="content-placeholder">Pas assez de données pour ${paramKey}.</div>`;
-                        parentDiv.querySelector('.content-placeholder').style.display = 'flex';
-                    }
-                    return; // Passer au paramètre suivant
-                }
-
-                // Ajouter l'ensemble de données de dispersion pour les points individuels
-                if (scatterPoints.length > 0) {
-                    datasets.push({
-                        type: 'scatter', // Définir explicitement le type pour cet ensemble de données
-                        label: 'Points de données individuels',
-                        data: scatterPoints,
-                        backgroundColor: 'rgba(255, 99, 132, 1)', // Couleur pour les points individuels
-                        borderColor: 'rgba(255, 99, 132, 1)',
-                        pointRadius: 6, // Taille des points
-                        pointHoverRadius: 8,
-                        showLine: false, // Ne pas tracer de lignes entre les points de dispersion
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    // Info-bulle personnalisée pour les points de dispersion pour afficher la méthode et la valeur
-                                    if (context.dataset.type === 'scatter') {
-                                        const point = context.raw;
-                                        return `${point.method}: ${formatNumber(point.y)}`;
-                                    }
-                                    return '';
-                                }
+        // Ajouter l'ensemble de données de dispersion pour les points individuels
+        if (scatterPoints.length > 0) {
+            datasets.push({
+                type: 'scatter', // Définir explicitement le type pour cet ensemble de données
+                label: 'Points de données individuels',
+                data: scatterPoints,
+                backgroundColor: 'rgba(255, 99, 132, 1)', // Couleur pour les points individuels
+                borderColor: 'rgba(255, 99, 132, 1)',
+                pointRadius: 6, // Taille des points
+                pointHoverRadius: 8,
+                showLine: false, // Ne pas tracer de lignes entre les points de dispersion
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            // Info-bulle personnalisée pour les points de dispersion pour afficher la méthode et la valeur
+                            if (context.dataset.type === 'scatter') {
+                                const point = context.raw;
+                                return `${point.method}: ${formatNumber(point.y)}`;
                             }
-                        }
-                    });
-                }
-
-                const ctx = boxplotElement.getContext('2d');
-
-                // Créer l'instance du graphique
-                charts[paramKey] = new Chart(ctx, {
-                    data: {
-                        labels: labels,
-                        datasets: datasets
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            title: {
-                                display: true,
-                                text: `Distribution de ${paramKey === 'n' ? 'n / nVth' : paramKey}`,
-                                font: {
-                                    size: 18,
-                                    weight: 'bold'
-                                },
-                                color: '#333'
-                            },
-                            legend: {
-                                display: false, // Masquer la légende car l'objectif principal est la boîte à moustaches + les points
-                            },
-                            tooltip: {
-                                // Rappels d'info-bulle unifiés pour la boîte à moustaches et la dispersion
-                                callbacks: {
-                                    title: function(context) {
-                                        if (context[0] && context[0].dataset.type === 'boxplot') {
-                                            return `Paramètre : ${paramKey === 'n' ? 'n / nVth' : paramKey}`;
-                                        } else if (context[0] && context[0].dataset.type === 'scatter') {
-                                            return `Point de donnée`;
-                                        }
-                                        return '';
-                                    },
-                                    label: function(context) {
-                                        if (context.dataset.type === 'boxplot') {
-                                            // Calculer les statistiques directement à partir du tableau de valeurs brutes pour la boîte à moustaches
-                                            const rawValues = context.dataset.data[context.dataIndex];
-                                            const stats = calculateBoxplotStats(rawValues);
-                                            
-                                            return [
-                                                `Min: ${stats.min}`,
-                                                `Q1: ${stats.q1}`,
-                                                `Médiane: ${stats.median}`,
-                                                `Q3: ${stats.q3}`,
-                                                `Max: ${stats.max}`
-                                            ];
-                                        } else if (context.dataset.type === 'scatter') {
-                                            const point = context.raw;
-                                            return `${point.method}: ${formatNumber(point.y)}`;
-                                        }
-                                        return '';
-                                    }
-                                }
-                            }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: false,
-                                title: {
-                                    display: true,
-                                    text: `Valeur de ${paramKey === 'n' ? 'n / nVth' : paramKey}`,
-                                    font: {
-                                        size: 14
-                                    },
-                                    color: '#555'
-                                },
-                                ticks: {
-                                    callback: function(value) {
-                                        return formatNumber(value);
-                                    },
-                                    color: '#666'
-                                }
-                            },
-                            x: {
-                                // Masquer les étiquettes et les tics de l'axe X pour une seule boîte à moustaches
-                                display: false,
-                                ticks: {
-                                    display: false
-                                }
-                            }
+                            return '';
                         }
                     }
-                });
+                }
             });
         }
+
+        const ctx = boxplotElement.getContext('2d');
+
+        // Créer l'instance du graphique
+        charts[paramKey] = new Chart(ctx, {
+            data: {
+                labels: labels,
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: `Distribution de ${paramKey === 'n' ? 'n / nVth' : paramKey}`,
+                        font: {
+                            size: 18,
+                            weight: 'bold'
+                        },
+                        color: '#333'
+                    },
+                    legend: {
+                        display: false, // Masquer la légende car l'objectif principal est la boîte à moustaches + les points
+                    },
+                    tooltip: {
+                        // Rappels d'info-bulle unifiés pour la boîte à moustaches et la dispersion
+                        callbacks: {
+                            title: function(context) {
+                                if (context[0] && context[0].dataset.type === 'boxplot') {
+                                    return `Paramètre : ${paramKey === 'n' ? 'n / nVth' : paramKey}`;
+                                } else if (context[0] && context[0].dataset.type === 'scatter') {
+                                    return `Point de donnée`;
+                                }
+                                return '';
+                            },
+                            label: function(context) {
+                                if (context.dataset.type === 'boxplot') {
+                                    // Calculer les statistiques directement à partir du tableau de valeurs brutes pour la boîte à moustaches
+                                    const rawValues = context.dataset.data[context.dataIndex];
+                                    const stats = calculateBoxplotStats(rawValues);
+                                    
+                                    return [
+                                        `Min: ${stats.min}`,
+                                        `Q1: ${stats.q1}`,
+                                        `Médiane: ${stats.median}`,
+                                        `Q3: ${stats.q3}`,
+                                        `Max: ${stats.max}`
+                                    ];
+                                } else if (context.dataset.type === 'scatter') {
+                                    const point = context.raw;
+                                    return `${point.method}: ${formatNumber(point.y)}`;
+                                }
+                                return '';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        title: {
+                            display: true,
+                            text: `Valeur de ${paramKey === 'n' ? 'n / nVth' : paramKey}`,
+                            font: {
+                                size: 14
+                            },
+                            color: '#555'
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return formatNumber(value);
+                            },
+                            color: '#666'
+                        }
+                    },
+                    x: {
+                        // Masquer les étiquettes et les tics de l'axe X pour une seule boîte à moustaches
+                        display: false,
+                        ticks: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+    });
+}
 
 // Fonction pour jouer avec le thème de la page
 function toggleTheme() {
@@ -412,7 +412,6 @@ function storeResults(data) {
     const result = {
         filename: currentFileName,
         methods: {},
-        errors: {}, // Ajout d'un objet pour stocker les erreurs
         images : {}
     };
 
@@ -453,23 +452,6 @@ function storeResults(data) {
         result.images.all = data.curve_image_all;
     }
 
-    // Ajouter les erreurs (error bounds) pour chaque méthode
-    if (data.error_bounds_mlp) {
-        result.errors.mlp = data.error_bounds_mlp;
-    }
-
-    if (data.error_bounds_cnn) {
-        result.errors.cnn = data.error_bounds_cnn;
-    }
-
-    if (data.error_bounds_genetique) {
-        result.errors.gen = data.error_bounds_genetique;
-    }
-
-    if (data.error_bounds_random) {
-        result.errors.rand = data.error_bounds_random;
-    }
-    
     allResults.push(result);
 }
 
@@ -477,38 +459,38 @@ function storeResults(data) {
 function updateComparisonTable(data) {
     // Méthode MLP
     if (data.params_mlp) {
-        updateTableCell("mlp", "J0", data.params_mlp.J0);
-        updateTableCell("mlp", "Jph", data.params_mlp.Jph);
-        updateTableCell("mlp", "Rs", data.params_mlp.Rs);
-        updateTableCell("mlp", "Rsh", data.params_mlp.Rsh);
-        updateTableCell("mlp", "n", data.params_mlp.n);
+        updateTableCell("mlp", "J0", formatFullNumber(data.params_mlp.J0));
+        updateTableCell("mlp", "Jph", formatFullNumber(data.params_mlp.Jph));
+        updateTableCell("mlp", "Rs", formatFullNumber(data.params_mlp.Rs));
+        updateTableCell("mlp", "Rsh", formatFullNumber(data.params_mlp.Rsh));
+        updateTableCell("mlp", "n", formatFullNumber(data.params_mlp.n));
     }
 
     // Méthode CNN
     if (data.params_cnn) {
-        updateTableCell("cnn", "J0", data.params_cnn.J0);
-        updateTableCell("cnn", "Jph", data.params_cnn.Jph);
-        updateTableCell("cnn", "Rs", data.params_cnn.Rs);
-        updateTableCell("cnn", "Rsh", data.params_cnn.Rsh);
-        updateTableCell("cnn", "n", data.params_cnn.n);
+        updateTableCell("cnn", "J0", formatFullNumber(data.params_cnn.J0));
+        updateTableCell("cnn", "Jph", formatFullNumber(data.params_cnn.Jph));
+        updateTableCell("cnn", "Rs", formatFullNumber(data.params_cnn.Rs));
+        updateTableCell("cnn", "Rsh", formatFullNumber(data.params_cnn.Rsh));
+        updateTableCell("cnn", "n", formatFullNumber(data.params_cnn.n));
     }
 
     // Méthode génétique
     if (data.params_genetique) {
-        updateTableCell("gen", "J0", data.params_genetique.J0);
-        updateTableCell("gen", "Jph", data.params_genetique.Jph);
-        updateTableCell("gen", "Rs", data.params_genetique.Rs);
-        updateTableCell("gen", "Rsh", data.params_genetique.Rsh);
-        updateTableCell("gen", "n", data.params_genetique.n);
+        updateTableCell("gen", "J0", formatFullNumber(data.params_genetique.J0));
+        updateTableCell("gen", "Jph", formatFullNumber(data.params_genetique.Jph));
+        updateTableCell("gen", "Rs", formatFullNumber(data.params_genetique.Rs));
+        updateTableCell("gen", "Rsh", formatFullNumber(data.params_genetique.Rsh));
+        updateTableCell("gen", "n", formatFullNumber(data.params_genetique.n));
     }
 
     // Méthode aléatoire
     if (data.params_random) {
-        updateTableCell("rand", "J0", data.params_random.J0);
-        updateTableCell("rand", "Jph", data.params_random.Jph);
-        updateTableCell("rand", "Rs", data.params_random.Rs);
-        updateTableCell("rand", "Rsh", data.params_random.Rsh);
-        updateTableCell("rand", "n", data.params_random.n);
+        updateTableCell("rand", "J0", formatFullNumber(data.params_random.J0);
+        updateTableCell("rand", "Jph", formatFullNumber(data.params_random.Jph));
+        updateTableCell("rand", "Rs", formatFullNumber(data.params_random.Rs));
+        updateTableCell("rand", "Rsh", formatFullNumber(data.params_random.Rsh));
+        updateTableCell("rand", "n", formatFullNumber(data.params_random.n));
     }
 }
 
@@ -516,12 +498,12 @@ function displayResults(data) {
     // Méthode MLP
     if (data.params_mlp) {
         updatePlaceholder("#mlp-method", `
-            J0: ${data.params_mlp.J0}<br>
-            Jph: ${data.params_mlp.Jph}<br>
-            Rs: ${data.params_mlp.Rs}<br>
-            Rsh: ${data.params_mlp.Rsh}<br>
-            n: ${data.params_mlp.n}<br>
-            SSD: ${data.ssd_mlp}
+            J0: ${formatFullNumber(data.params_mlp.J0)}<br>
+            Jph: ${formatFullNumber(data.params_mlp.Jph)}<br>
+            Rs: ${formatFullNumber(data.params_mlp.Rs)}<br>
+            Rsh: ${formatFullNumber(data.params_mlp.Rsh)}<br>
+            n: ${formatFullNumber(data.params_mlp.n)}<br>
+            SSD: ${formatFullNumber(data.ssd_mlp)}
         `);
         resultDetails["mlp"] = {
             params: data.params_mlp,
@@ -534,12 +516,12 @@ function displayResults(data) {
     // Méthode CNN
     if (data.params_cnn) {
         updatePlaceholder("#cnn-method", `
-            J0: ${data.params_cnn.J0}<br>
-            Jph: ${data.params_cnn.Jph}<br>
-            Rs: ${data.params_cnn.Rs}<br>
-            Rsh: ${data.params_cnn.Rsh}<br>
-            n: ${data.params_cnn.n}<br>
-            SSD: ${data.ssd_cnn}
+            J0: ${formatFullNumber(data.params_cnn.J0)}<br>
+            Jph: ${formatFullNumber(data.params_cnn.Jph)}<br>
+            Rs: ${formatFullNumber(data.params_cnn.Rs)}<br>
+            Rsh: ${formatFullNumber(data.params_cnn.Rsh)}<br>
+            n: ${formatFullNumber(data.params_cnn.n)}<br>
+            SSD: ${formatFullNumber(data.ssd_cnn)}
         `);
         resultDetails["cnn"] = {
             params: data.params_cnn,
@@ -552,12 +534,12 @@ function displayResults(data) {
     // Méthode génétique
     if (data.params_genetique) {
         updatePlaceholder("#genetic-method", `
-            J0: ${data.params_genetique.J0}<br>
-            Jph: ${data.params_genetique.Jph}<br>
-            Rs: ${data.params_genetique.Rs}<br>
-            Rsh: ${data.params_genetique.Rsh}<br>
-            n: ${data.params_genetique.n}<br>
-            SSD: ${data.ssd_gen}
+            J0: ${formatFullNumber(data.params_genetique.J0)}<br>
+            Jph: ${formatFullNumber(data.params_genetique.Jph)}<br>
+            Rs: ${formatFullNumber(data.params_genetique.Rs)}<br>
+            Rsh: ${formatFullNumber(data.params_genetique.Rsh)}<br>
+            n: ${formatFullNumber(data.params_genetique.n)}<br>
+            SSD: ${formatFullNumber(data.ssd_gen)}
         `);
         resultDetails["gen"] = {
             params: data.params_genetique,
@@ -570,12 +552,12 @@ function displayResults(data) {
     // Méthode aléatoire
     if (data.params_random) {
         updatePlaceholder("#random-method", `
-            J0: ${data.params_random.J0}<br>
-            Jph: ${data.params_random.Jph}<br>
-            Rs: ${data.params_random.Rs}<br>
-            Rsh: ${data.params_random.Rsh}<br>
-            n: ${data.params_random.n}<br>
-            SSD: ${data.ssd_rand}
+            J0: ${formatFullNumber(data.params_random.J0)}<br>
+            Jph: ${formatFullNumber(data.params_random.Jph)}<br>
+            Rs: ${formatFullNumber(data.params_random.Rs)}<br>
+            Rsh: ${formatFullNumber(data.params_random.Rsh)}<br>
+            n: ${formatFullNumber(data.params_random.n)}<br>
+            SSD: ${formatFullNumber(data.ssd_rand)}
         `);
         resultDetails["rand"] = {
             params: data.params_random,
@@ -602,6 +584,14 @@ function formatNumber(num) {
         }
         // Format arrondi pour les autres nombres
         return num.toFixed(4);
+    }
+    return num;
+}
+
+// Nouvelle fonction pour formater les nombres avec une précision complète
+function formatFullNumber(num) {
+    if (typeof num === 'number') {
+        return num.toPrecision(8); // Utilise 8 chiffres significatifs pour une meilleure précision
     }
     return num;
 }
@@ -656,9 +646,9 @@ function displaySSD(ssdValues) {
             <div class="ssd-bar-container">
                 <div class="ssd-label">${methodToName(method)}</div>
                 <div class="ssd-bar-wrapper">
-                    <div class="ssd-bar" style="width: ${percentage}%;" title="SSD: ${formatNumber(ssd)}"></div>
+                    <div class="ssd-bar" style="width: ${percentage}%;" title="SSD: ${formatFullNumber(ssd)}"></div>
                 </div>
-                <div class="ssd-value">${formatNumber(ssd)}</div>
+                <div class="ssd-value">${formatFullNumber(ssd)}</div>
             </div>
         `;
     }
@@ -683,149 +673,198 @@ function openDetailsModal(method) {
     const modal = document.getElementById('details-modal');
     const distributionZone = document.getElementById('distribution-zone');
     const curveImageContainer = document.getElementById('curve-image-container');
-    const ssdValue = document.getElementById('ssd-value');
+    const ssdValueContainer = document.getElementById('ssd-value'); // Renommé pour clarté
     const title = document.getElementById('modal-title');
 
-    // Rechercher les détails correspondants dans allResults
-    const details = allResults.find(result => result.methods[method] !== undefined);
-
+    const details = resultDetails[method];
     console.log("Résultat avant modale :", details);
 
-    if (!details || !details.methods || !details.methods[method]) {
+    if (!details || !details.params) {
         console.warn("[WARN] Données manquantes pour la méthode :", method, details);
-        distributionZone.innerHTML = "<p>Aucune donnée de paramètres disponible pour cette méthode.</p>";
+        distributionZone.innerHTML = "<p>Aucune donnée disponible pour cette méthode.</p>";
         curveImageContainer.innerHTML = "";
-        ssdValue.innerHTML = "";
-        // On ne touche pas à distributionZone car on va y mettre les graphiques
+        ssdValueContainer.innerHTML = "";
     } else {
         title.textContent = `Détails – ${methodToName(method)}`;
+        
+        // --- RESTORED PARAMETERS TABLE ---
+        let paramsHTML = '<table class="params-table">';
+        paramsHTML += '<tr><th>Paramètre</th><th>Valeur</th></tr>';
+        paramsHTML += `<tr><td>J0</td><td>${formatFullNumber(details.params.J0)}</td></tr>`;
+        paramsHTML += `<tr><td>Jph</td><td>${formatFullNumber(details.params.Jph)}</td></tr>`;
+        paramsHTML += `<tr><td>Rs</td><td>${formatFullNumber(details.params.Rs)}</td></tr>`;
+        paramsHTML += `<tr><td>Rsh</td><td>${formatFullNumber(details.params.Rsh)}</td></tr>`;
+        paramsHTML += `<tr><td>n</td><td>${formatFullNumber(details.params.n)}</td></tr>`;
+        paramsHTML += '</table>';
+        
+        // Append the table to the distributionZone first
+        distributionZone.innerHTML = paramsHTML;
 
-        const params = details.methods[method];
-        const errors = details.errors ? details.errors[method] : null;
+        // --- VERTICAL ERROR BAR CHART (Point with uncertainty bars) ---
+        const canvas = document.getElementById('error-bar-chart');
+        const ctx = canvas ? canvas.getContext('2d') : null;
 
-        distributionZone.innerHTML = ''; // Effacer le contenu précédent de la zone de distribution
-
-        if (errors) {
-            // Créer un conteneur flex pour aligner les graphiques horizontalement
-            const chartContainer = document.createElement('div');
-            chartContainer.style.display = 'flex';
-            chartContainer.style.flexWrap = 'wrap'; // Permettre le retour à la ligne si nécessaire
-            distributionZone.appendChild(chartContainer);
-
-            for (const paramName in errors) {
-                if (errors.hasOwnProperty(paramName) && errors[paramName].min !== undefined && errors[paramName].max !== undefined && errors[paramName].central !== undefined) {
-                    const canvas = document.createElement('canvas');
-                    canvas.id = `error-bar-canvas-${method}-${paramName}`;
-                    canvas.width = 200;
-                    canvas.height = 150;
-                    canvas.style.marginRight = '10px';
-                    chartContainer.appendChild(canvas);
-                    const ctx = canvas.getContext('2d');
-                    plotErrorBarChart(ctx, paramName, errors[paramName].min, errors[paramName].max, errors[paramName].central);
-                }
-            }
+        if (details.error && ctx) {
+            canvas.style.display = 'block'; // Ensure canvas is visible
+            plotErrorBars(method, details.error);
+        } else if (canvas && ctx) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
+            canvas.style.display = 'none'; // Optionally hide the canvas if no data
         } else {
-            distributionZone.innerHTML = "<p>Barres d'erreur non disponibles pour cette méthode.</p>";
+            // Add a message if canvas or context is not available for the chart
+            const chartPlaceholder = document.createElement('p');
+            chartPlaceholder.textContent = "Graphique d'erreurs non disponible.";
+            distributionZone.appendChild(chartPlaceholder); // Append after params table
         }
-
-        // Afficher l'image si disponible
-        const imageName = `curve_image_${method.replace('gen', 'gen')}`; // Ajustement pour 'gen'
-        if (details.images && details.images[imageName]) {
-            curveImageContainer.innerHTML = `<img src="data:image/png;base64,${details.images[imageName]}" alt="Courbe ${methodToName(method)}" style="width:100%; margin-top:15px; border-radius:8px;">`;
+                
+        // --- ISOLATED CURVE IMAGE ---
+        if (details.image) {
+            curveImageContainer.innerHTML = `<img src="data:image/png;base64,${details.image}" alt="Courbe ${method}" style="width:100%; margin-top:15px; border-radius:8px;">`;
         } else {
             curveImageContainer.innerHTML = "";
         }
-
-        // Afficher le SSD si disponible (rechercher la clé ssd correspondante)
-        const ssdKey = `ssd_${method.replace('gen', 'gen')}`; // Ajustement pour 'gen'
-        if (details.hasOwnProperty(ssdKey) && details[ssdKey] !== null && details[ssdKey] !== undefined) {
-            ssdValue.innerHTML = `<div class="ssd-display">SSD: <span class="ssd-value">${details[ssdKey]}</span></div>`;
+        
+        // --- SSD VALUE ---
+        if (details.ssd !== null && details.ssd !== undefined) {
+            ssdValueContainer.innerHTML = `<div class="ssd-display">SSD: <span class="ssd-value">${formatFullNumber(details.ssd)}</span></div>`;
         } else {
-            ssdValue.innerHTML = "";
+            ssdValueContainer.innerHTML = "";
         }
     }
 
     modal.classList.remove("hidden");
 }
 
-function plotErrorBarChart(ctx, paramName, minValue, maxValue, centralValue) {
-    const barHeight = 30;
-    const centerLineThickness = 2;
-    const errorBarThickness = 1;
-    const paddingLeft = 50;
-    const paddingBottom = 30;
-    const textOffset = 5;
+function plotErrorBars(method, statsData) {
+    const ctx = document.getElementById('error-bar-chart').getContext('2d');
+    if (!statsData || !statsData.means) return;
 
-    const canvasWidth = ctx.canvas.width;
-    const canvasHeight = ctx.canvas.height;
+    const labels = ['J0', 'Jph', 'Rs', 'Rsh', 'n'];
+    const means = statsData.means;
+    const mins = statsData.mins;
+    const maxs = statsData.maxs;
 
-    // Trouver la plage globale pour normaliser les valeurs
-    let minGlobal = Infinity;
-    let maxGlobal = -Infinity;
-    allResults.forEach(result => {
-        const errors = result.errors;
-        if (errors) {
-            for (const methodErrors in errors) {
-                if (errors[methodErrors] && errors[methodErrors][paramName]) {
-                    minGlobal = Math.min(minGlobal, errors[methodErrors][paramName].min);
-                    maxGlobal = Math.max(maxGlobal, errors[methodErrors][paramName].max);
+    // Prepare data for vertical points with error bars
+    const dataPoints = labels.map(param => ({
+        x: param, // Parameter name on X-axis
+        y: means[param], // Mean value on Y-axis
+        yMin: mins[param], // Min value for error bar
+        yMax: maxs[param] // Max value for error bar
+    }));
+
+    const errorBarData = {
+        labels: labels,
+        datasets: [{
+            label: `${methodToName(method)} – Moyenne et écart`,
+            data: dataPoints,
+            backgroundColor: 'rgba(54, 162, 235, 0.5)', // Color for the points
+            borderColor: 'rgb(54, 162, 235)',
+            borderWidth: 1,
+            pointRadius: 8, // Size of the point
+            pointBackgroundColor: 'rgb(54, 162, 235)',
+            pointBorderColor: 'rgb(54, 162, 235)',
+            type: 'scatter', // Use scatter type for points
+            showLine: false, // Do not draw lines between points
+            // Custom error bar rendering (will be handled by a plugin or manual drawing if no plugin)
+            // For Chart.js 3.x+, you might need a plugin like 'chartjs-chart-error-bars'
+            // If not using a plugin, you'd draw these manually in a custom plugin or afterDraw
+            errorBarColor: 'rgb(54, 162, 235)', // This property is custom, not native Chart.js
+            errorBarLineWidth: 2, // This property is custom
+            errorBarWhiskerWidth: 10 // This property is custom
+        }]
+    };
+
+    const config = {
+        type: 'scatter', // Main chart type is scatter
+        data: errorBarData,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    enabled: true,
+                    callbacks: {
+                        label: function(context) {
+                            const point = context.raw;
+                            return [
+                                `Paramètre: ${point.x}`,
+                                `Moyenne: ${formatFullNumber(point.y)}`,
+                                `Min: ${formatFullNumber(point.yMin)}`,
+                                `Max: ${formatFullNumber(point.yMax)}`
+                            ];
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    type: 'category', // Use category scale for parameter labels
+                    labels: labels,
+                    title: { display: true, text: 'Paramètre' },
+                    grid: {
+                        display: false // Hide vertical grid lines
+                    }
+                },
+                y: {
+                    beginAtZero: false,
+                    title: { display: true, text: 'Valeur' },
+                    ticks: {
+                        callback: function(value) {
+                            return formatFullNumber(value); // Use full precision for ticks
+                        }
+                    }
                 }
             }
-        }
-    });
+        },
+        // Custom plugin to draw error bars if 'chartjs-chart-error-bars' is not used
+        plugins: [{
+            id: 'errorBarsPlugin',
+            afterDatasetsDraw(chart, args, options) {
+                const { ctx, chartArea: { left, right, top, bottom, width, height }, scales: { x, y } } = chart;
 
-    // Si minGlobal et maxGlobal sont égaux, on ajuste légèrement pour éviter la division par zéro
-    if (minGlobal === maxGlobal) {
-        minGlobal -= Math.abs(centralValue) * 0.1;
-        maxGlobal += Math.abs(centralValue) * 0.1;
-        if (minGlobal === maxGlobal) { // Cas où centralValue est aussi 0
-            minGlobal = -1;
-            maxGlobal = 1;
-        }
+                chart.data.datasets.forEach((dataset, datasetIndex) => {
+                    if (dataset.type === 'scatter' && dataset.errorBarColor) {
+                        ctx.save();
+                        ctx.strokeStyle = dataset.errorBarColor;
+                        ctx.lineWidth = dataset.errorBarLineWidth || 1;
+
+                        dataset.data.forEach((point, index) => {
+                            const xCoord = x.getPixelForValue(point.x);
+                            const yMean = y.getPixelForValue(point.y);
+                            const yMin = y.getPixelForValue(point.yMin);
+                            const yMax = y.getPixelForValue(point.yMax);
+                            const whiskerWidth = dataset.errorBarWhiskerWidth / 2 || 5;
+
+                            // Draw vertical line
+                            ctx.beginPath();
+                            ctx.moveTo(xCoord, yMin);
+                            ctx.lineTo(xCoord, yMax);
+                            ctx.stroke();
+
+                            // Draw top whisker
+                            ctx.beginPath();
+                            ctx.moveTo(xCoord - whiskerWidth, yMin);
+                            ctx.lineTo(xCoord + whiskerWidth, yMin);
+                            ctx.stroke();
+
+                            // Draw bottom whisker
+                            ctx.beginPath();
+                            ctx.moveTo(xCoord - whiskerWidth, yMax);
+                            ctx.lineTo(xCoord + whiskerWidth, yMax);
+                            ctx.stroke();
+                        });
+                        ctx.restore();
+                    }
+                });
+            }
+        }]
+    };
+
+    if (window.errorBarChart) {
+        window.errorBarChart.destroy();
     }
-
-    const scale = (value) => paddingLeft + (canvasWidth - 2 * paddingLeft) * (value - minGlobal) / (maxGlobal - minGlobal);
-
-    // Dessiner l'axe horizontal
-    ctx.beginPath();
-    ctx.moveTo(paddingLeft, canvasHeight - paddingBottom);
-    ctx.lineTo(canvasWidth - paddingLeft, canvasHeight - paddingBottom);
-    ctx.strokeStyle = 'black';
-    ctx.lineWidth = 1;
-    ctx.stroke();
-
-    // Dessiner le nom du paramètre sur l'axe Y
-    ctx.fillStyle = 'black';
-    ctx.font = '12px Arial';
-    ctx.textAlign = 'left';
-    ctx.fillText(paramName, 10, canvasHeight / 2);
-
-    // Dessiner la barre d'erreur
-    const yCenter = canvasHeight / 2 - barHeight / 2;
-    const xMin = scale(minValue);
-    const xMax = scale(maxValue);
-    const xCentral = scale(centralValue);
-
-    ctx.beginPath();
-    ctx.moveTo(xMin, yCenter + barHeight / 2);
-    ctx.lineTo(xMax, yCenter + barHeight / 2);
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.7)';
-    ctx.lineWidth = errorBarThickness * 2;
-    ctx.stroke();
-
-    // Dessiner la ligne centrale
-    ctx.beginPath();
-    ctx.moveTo(xCentral, yCenter);
-    ctx.lineTo(xCentral, yCenter + barHeight);
-    ctx.strokeStyle = 'blue';
-    ctx.lineWidth = centerLineThickness;
-    ctx.stroke();
-
-    // Afficher la valeur centrale
-    ctx.fillStyle = 'blue';
-    ctx.font = '10px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText(centralValue.toFixed(3), xCentral, yCenter - textOffset);
+    window.errorBarChart = new Chart(ctx, config);
 }
 
 // Permettre le traitement batch des fichiers
@@ -872,12 +911,12 @@ function exportResultsToCSV() {
             const line = [
                 filename,
                 methodName,
-                params.J0,
-                params.Jph,
-                params.Rs,
-                params.Rsh,
-                params.n,
-                ssd
+                formatFullNumber(params.J0),
+                formatFullNumber(params.Jph),
+                formatFullNumber(params.Rs),
+                formatFullNumber(params.Rsh),
+                formatFullNumber(params.n),
+                formatFullNumber(ssd)
             ].join(',');
             
             csvContent += line + '\n';
@@ -962,4 +1001,3 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById('toggle-theme-btn').addEventListener('click', toggleColorTheme);
     }
 });
-
