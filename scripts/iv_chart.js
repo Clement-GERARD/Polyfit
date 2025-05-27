@@ -4,7 +4,6 @@ let methodColors = {
     random: getComputedStyle(document.documentElement).getPropertyValue('--method-rand-color').trim() || '#FF6B6B',
     genetique: getComputedStyle(document.documentElement).getPropertyValue('--method-gen-color').trim() || '#6B5CA5',
     mlp: getComputedStyle(document.documentElement).getPropertyValue('--method-mlp-color').trim() || '#4ECDC4',
-    cnn: getComputedStyle(document.documentElement).getPropertyValue('--method-cnn-color').trim() || '#FFD166'
 };
 
 // Stockage des instances de graphiques
@@ -26,14 +25,12 @@ function resetColors() {
         random: getComputedStyle(document.documentElement).getPropertyValue('--method-rand-color').trim() || '#FF6B6B',
         genetique: getComputedStyle(document.documentElement).getPropertyValue('--method-gen-color').trim() || '#6B5CA5',
         mlp: getComputedStyle(document.documentElement).getPropertyValue('--method-mlp-color').trim() || '#4ECDC4',
-        cnn: getComputedStyle(document.documentElement).getPropertyValue('--method-cnn-color').trim() || '#FFD166'
     };
     
     // Mettre à jour les inputs de couleur
     document.getElementById('experimental-color').value = methodColors.experimental;
     document.getElementById('random-color').value = methodColors.random;
     document.getElementById('mlp-color').value = methodColors.mlp;
-    document.getElementById('cnn-color').value = methodColors.cnn;
     document.getElementById('genetique-color').value = methodColors.genetique;
     
     // Mettre à jour le graphique si disponible
@@ -74,7 +71,6 @@ function loadSavedColors() {
                 document.getElementById('experimental-color').value = methodColors.experimental;
                 document.getElementById('random-color').value = methodColors.random;
                 document.getElementById('mlp-color').value = methodColors.mlp;
-                document.getElementById('cnn-color').value = methodColors.cnn;
                 document.getElementById('genetique-color').value = methodColors.genetique;
             }
         } catch (error) {
@@ -157,24 +153,6 @@ function createIVChart(data) {
             fill: false,
             tension: 0.4,
             order: 3
-        });
-    }
-    
-    // Courbe CNN
-    if (data.curve_data.cnn) {
-        datasets.push({
-            label: 'CNN',
-            data: data.curve_data.cnn.x.map((x, i) => ({
-                x: x,
-                y: data.curve_data.cnn.y[i]
-            })),
-            borderColor: methodColors.cnn,
-            backgroundColor: hexToRgba(methodColors.cnn, 0.2),
-            borderWidth: 2,
-            pointRadius: 0,
-            fill: false,
-            tension: 0.4,
-            order: 4
         });
     }
     
