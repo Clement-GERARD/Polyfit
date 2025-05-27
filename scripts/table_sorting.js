@@ -48,7 +48,7 @@ function updateTableWithAllValues(data) {
     
     // Mettre à jour les valeurs pour chaque méthode et paramètre
     const parameters = ['J0', 'Jph', 'Rs', 'Rsh', 'n', 'SSD'];
-    const methods = ['rand', 'mlp', 'cnn', 'gen'];
+    const methods = ['rand', 'mlp', 'gen'];
     
     parameters.forEach(param => {
         methods.forEach(method => {
