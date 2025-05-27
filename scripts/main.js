@@ -752,13 +752,16 @@ function plotErrorBarsIndividual(method, statsData, paramToPlot, ctx) {
     const means = { [paramToPlot]: statsData[paramToPlot].central };
     const mins = { [paramToPlot]: statsData[paramToPlot].min };
     const maxs = { [paramToPlot]: statsData[paramToPlot].max };
+    // Access the predicted value from resultDetails
+    const predictedValue = resultDetails[method].params[paramToPlot];
 
     // Prepare data for vertical points with error bars
     const dataPoints = labels.map(param => ({
         x: param, // Parameter name on X-axis
         y: means[param], // Mean value on Y-axis
         yMin: mins[param], // Min value for error bar
-        yMax: maxs[param] // Max value for error bar
+        yMax: maxs[param], // Max value for error bar
+        predicted: predictedValue // Add predicted value
     }));
 
     const errorBarData = {
@@ -766,17 +769,29 @@ function plotErrorBarsIndividual(method, statsData, paramToPlot, ctx) {
         datasets: [{
             label: `${methodToName(method)} – ${paramToPlot}`,
             data: dataPoints,
-            backgroundColor: 'rgba(54, 162, 235, 0.5)', // Color for the points
+            backgroundColor: 'rgba(54, 162, 235, 0.5)', // Color for the mean point
             borderColor: 'rgb(54, 162, 235)',
             borderWidth: 1,
-            pointRadius: 8, // Size of the point
+            pointRadius: 8, // Size of the mean point
             pointBackgroundColor: 'rgb(54, 162, 235)',
             pointBorderColor: 'rgb(54, 162, 235)',
-            type: 'scatter', // Use scatter type for points
+            type: 'scatter', // Use scatter type for the mean point
             showLine: false, // Do not draw lines between points
             errorBarColor: 'rgb(54, 162, 235)', // Custom property for error bar color
             errorBarLineWidth: 2, // Custom property
             errorBarWhiskerWidth: 10 // Custom property
+        },
+        {
+            label: `Prédiction – ${paramToPlot}`,
+            data: dataPoints.map(p => ({ x: p.x, y: p.predicted })),
+            backgroundColor: 'rgba(255, 99, 132, 0.8)', // Color for the predicted point
+            borderColor: 'rgb(255, 99, 132)',
+            borderWidth: 1,
+            pointRadius: 6,
+            pointBackgroundColor: 'rgb(255, 99, 132)',
+            pointBorderColor: 'rgb(255, 99, 132)',
+            type: 'scatter',
+            showLine: false
         }]
     };
 
@@ -793,12 +808,16 @@ function plotErrorBarsIndividual(method, statsData, paramToPlot, ctx) {
                     callbacks: {
                         label: function(context) {
                             const point = context.raw;
-                            return [
-                                `Paramètre: ${point.x}`,
-                                `Moyenne: ${formatFullNumber(point.y)}`,
-                                `Min: ${formatFullNumber(point.yMin)}`,
-                                `Max: ${formatFullNumber(point.yMax)}`
-                            ];
+                            if (context.datasetIndex === 0) {
+                                return [
+                                    `Paramètre: ${point.x}`,
+                                    `Moyenne: ${formatFullNumber(point.y)}`,
+                                    `Min: ${formatFullNumber(point.yMin)}`,
+                                    `Max: ${formatFullNumber(point.yMax)}`
+                                ];
+                            } else {
+                                return [`Prédiction: ${formatFullNumber(point.y)}`];
+                            }
                         }
                     }
                 }
@@ -810,6 +829,10 @@ function plotErrorBarsIndividual(method, statsData, paramToPlot, ctx) {
                     title: { display: true, text: 'Paramètre' },
                     grid: {
                         display: false // Hide vertical grid lines
+                    },
+                    // Center the label on the X-axis
+                    ticks: {
+                        align: 'center'
                     }
                 },
                 y: {
@@ -819,7 +842,10 @@ function plotErrorBarsIndividual(method, statsData, paramToPlot, ctx) {
                         callback: function(value) {
                             return formatFullNumber(value); // Use full precision for ticks
                         }
-                    }
+                    },
+                    // Adjust the scale to fit the error bars
+                    suggestedMin: Math.min(...dataPoints.map(p => p.yMin)),
+                    suggestedMax: Math.max(...dataPoints.map(p => p.yMax))
                 }
             }
         },
@@ -830,14 +856,13 @@ function plotErrorBarsIndividual(method, statsData, paramToPlot, ctx) {
                 const { ctx, chartArea: { left, right, top, bottom, width, height }, scales: { x, y } } = chart;
 
                 chart.data.datasets.forEach((dataset, datasetIndex) => {
-                    if (dataset.type === 'scatter' && dataset.errorBarColor) {
+                    if (datasetIndex === 0 && dataset.type === 'scatter' && dataset.errorBarColor) {
                         ctx.save();
                         ctx.strokeStyle = dataset.errorBarColor;
                         ctx.lineWidth = dataset.errorBarLineWidth || 1;
 
                         dataset.data.forEach((point, index) => {
                             const xCoord = x.getPixelForValue(point.x);
-                            const yMean = y.getPixelForValue(point.y);
                             const yMin = y.getPixelForValue(point.yMin);
                             const yMax = y.getPixelForValue(point.yMax);
                             const whiskerWidth = dataset.errorBarWhiskerWidth / 2 || 5;
