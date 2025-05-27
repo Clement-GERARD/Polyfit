@@ -13,14 +13,13 @@ function createBoxplots(distributionData) {
     const parameters = ["J0", "Jph", "Rs", "Rsh", "n", "SSD"];
     
     // Méthodes disponibles
-    const methods = ["random", "genetique", "mlp", "cnn"];
+    const methods = ["random", "genetique", "mlp"];
     
     // Couleurs pour chaque méthode, utilisant les couleurs du thème
     const methodColors = {
         random: getComputedStyle(document.documentElement).getPropertyValue('--method-rand-color') || 'rgba(255, 99, 132, 0.7)',
         genetique: getComputedStyle(document.documentElement).getPropertyValue('--method-gen-color') || 'rgba(75, 192, 192, 0.7)',
-        mlp: getComputedStyle(document.documentElement).getPropertyValue('--method-mlp-color') || 'rgba(54, 162, 235, 0.7)',
-        cnn: getComputedStyle(document.documentElement).getPropertyValue('--method-cnn-color') || 'rgba(255, 206, 86, 0.7)'
+        mlp: getComputedStyle(document.documentElement).getPropertyValue('--method-mlp-color') || 'rgba(54, 162, 235, 0.7)'
     };
 
     // Créer un boxplot pour chaque paramètre
@@ -232,7 +231,6 @@ function getMethodPointStyle(method) {
         random: 'circle',
         genetique: 'triangle',
         mlp: 'rect',
-        cnn: 'star'
     };
     
     return styles[method] || 'circle';
@@ -282,7 +280,6 @@ function methodToName(methodKey) {
         'rand': 'Classique',
         'random': 'Classique',
         'mlp': 'MLP',
-        'cnn': 'CNN',
         'gen': 'Génétique',
         'genetique': 'Génétique'
     };
@@ -308,7 +305,6 @@ function createRadarChart(containerId, data) {
     const methodColors = {
         rand: getComputedStyle(document.documentElement).getPropertyValue('--method-rand-color') || 'rgba(255, 99, 132, 0.7)',
         mlp: getComputedStyle(document.documentElement).getPropertyValue('--method-mlp-color') || 'rgba(54, 162, 235, 0.7)',
-        cnn: getComputedStyle(document.documentElement).getPropertyValue('--method-cnn-color') || 'rgba(255, 206, 86, 0.7)',
         gen: getComputedStyle(document.documentElement).getPropertyValue('--method-gen-color') || 'rgba(75, 192, 192, 0.7)'
     };
     
@@ -449,7 +445,6 @@ function getMethodKeyFromName(methodName) {
     const methodMap = {
         'Classique': 'rand',
         'MLP': 'mlp',
-        'CNN': 'cnn',
         'Génétique': 'gen'
     };
     
@@ -471,7 +466,6 @@ function createSSDComparisonChart(containerId) {
     const datasets = {
         rand: [],
         mlp: [],
-        cnn: [],
         gen: []
     };
     
@@ -493,7 +487,6 @@ function createSSDComparisonChart(containerId) {
     const methodColors = {
         rand: getComputedStyle(document.documentElement).getPropertyValue('--method-rand-color') || 'rgba(255, 99, 132, 0.7)',
         mlp: getComputedStyle(document.documentElement).getPropertyValue('--method-mlp-color') || 'rgba(54, 162, 235, 0.7)',
-        cnn: getComputedStyle(document.documentElement).getPropertyValue('--method-cnn-color') || 'rgba(255, 206, 86, 0.7)',
         gen: getComputedStyle(document.documentElement).getPropertyValue('--method-gen-color') || 'rgba(75, 192, 192, 0.7)'
     };
     
