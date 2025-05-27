@@ -710,6 +710,7 @@ function openDetailsModal(method) {
             ['J0', 'Rs', 'Rsh', 'n'].forEach(param => {
                 const canvas = document.createElement('canvas');
                 canvas.id = `error-bar-chart-${param.toLowerCase()}`;
+                canvas.style.width = '35%'; // Occuper toute la largeur du conteneur parent
                 canvas.style.maxHeight = '200px'; // Adjust as needed
                 chartContainer.appendChild(canvas);
                 plotErrorBarsIndividual(method, details.error, param, canvas.getContext('2d'));
