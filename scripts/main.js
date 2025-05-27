@@ -832,7 +832,7 @@ function plotErrorBarsIndividual(method, statsData, paramToPlot, ctx) {
                 },
                 y: {
                     beginAtZero: false,
-                    title: { display: true, text: `${methodToName(method)}' },
+                    title: { display: true, text: `${methodToName(method)}` },
                     ticks: {
                         callback: function(value) {
                             return formatFullNumber(value);
