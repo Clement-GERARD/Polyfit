@@ -486,7 +486,7 @@ function updateComparisonTable(data) {
 
     // Méthode aléatoire
     if (data.params_random) {
-        updateTableCell("rand", "J0", formatFullNumber(data.params_random.J0);
+        updateTableCell("rand", "J0", formatFullNumber(data.params_random.J0));
         updateTableCell("rand", "Jph", formatFullNumber(data.params_random.Jph));
         updateTableCell("rand", "Rs", formatFullNumber(data.params_random.Rs));
         updateTableCell("rand", "Rsh", formatFullNumber(data.params_random.Rsh));
