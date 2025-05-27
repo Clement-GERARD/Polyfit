@@ -159,6 +159,13 @@ label[for="file-input"]:hover {
   transform: translateX(20px);
 }
 
+main#raw-display {
+    display: flex;
+    margin: 2%;
+    gap: 2%;
+    flex-direction: column;
+}
+
 /* Conteneur principal */
 .main-container {
   display: flex;
