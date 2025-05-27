@@ -705,7 +705,7 @@ function openDetailsModal(method) {
             const chartContainer = document.createElement('div');
             chartContainer.style.display = 'grid';
             chartContainer.style.gap = '10px';
-            chartContainer.style.max-width=  '200px';
+            chartContainer.style.width=  '35%';
             chartContainer.style.height= "300px";
             distributionZone.appendChild(chartContainer);
 
